@@ -695,6 +695,49 @@ export const toolSchemas = [
       required: ['resourceType', 'queryParams']
     }
   },
+  // Keep in sync with callMedplumApi schema in src/index.ts
+  {
+    name: 'callMedplumApi',
+    description: 'Executes any Medplum API endpoint (FHIR or admin) with a specified HTTP method, path, optional query parameters, and optional body. Useful for full coverage including Binary upload/download, admin/project management, auth, and other custom Medplum endpoints.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        method: {
+          type: 'string',
+          enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+          description: 'HTTP method to use for the request.'
+        },
+        path: {
+          type: 'string',
+          description: "Relative Medplum API path, e.g., 'fhir/R4/Patient', 'fhir/R4/ValueSet/$expand', or 'admin/projects'. Leading slashes are optional."
+        },
+        queryParams: {
+          type: 'object',
+          description: 'Optional query parameters to append; array values will be sent as repeated parameters.',
+          additionalProperties: {
+            oneOf: [
+              { type: 'string' },
+              { type: 'number' },
+              { type: 'boolean' },
+              { type: 'array', items: { oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }] } }
+            ]
+          }
+        },
+        body: {
+          description: 'Optional JSON body for write operations (POST/PUT/PATCH).',
+          oneOf: [
+            { type: 'object' },
+            { type: 'array' },
+            { type: 'string' },
+            { type: 'number' },
+            { type: 'boolean' },
+            { type: 'null' }
+          ]
+        }
+      },
+      required: ['method', 'path']
+    }
+  },
   // Condition Tool Schemas
   {
     name: 'createCondition',

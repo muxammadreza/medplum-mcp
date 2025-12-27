@@ -90,6 +90,9 @@ The MCP server currently supports a comprehensive set of **33 tools** for managi
 ### 🔍 **General FHIR Operations (1 tool)**
 *   `generalFhirSearch`: Generic FHIR search with custom parameters for any resource type, enabling advanced queries across all FHIR resources.
 
+### 🌐 **Universal Medplum API (1 tool)**
+*   `callMedplumApi`: Invoke any Medplum endpoint (FHIR, admin, auth, Binary, operations) by specifying method, path, query parameters, and optional body—providing coverage for the full Medplum API surface.
+
 Each tool is exposed to the LLM via a well-defined JSON schema and is callable through a dedicated test harness (`src/llm-test-harness.ts`), facilitating robust testing and integration.
 
 ## 🛠️ Technology Stack

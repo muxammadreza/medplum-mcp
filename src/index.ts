@@ -69,6 +69,7 @@ import {
 import {
   generalFhirSearch,
 } from './tools/generalFhirSearchUtils.js';
+import { callMedplumApi } from './tools/apiRequestUtils.js';
 
 // Load environment variables
 dotenv.config();
@@ -944,6 +945,48 @@ const mcpTools = [
       required: ["resourceType", "queryParams"],
     },
   },
+  {
+    name: "callMedplumApi",
+    description: "Executes any Medplum API endpoint (FHIR or admin) with a specified HTTP method, path, optional query parameters, and optional body. Useful for full coverage including Binary upload/download, admin/project management, auth, and other custom Medplum endpoints.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        method: {
+          type: "string",
+          description: "HTTP method to use for the request.",
+          enum: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        },
+        path: {
+          type: "string",
+          description: "Medplum API path, e.g., 'fhir/R4/Patient' or 'admin/projects'. Leading slashes are optional.",
+        },
+        queryParams: {
+          type: "object",
+          description: "Optional query parameters to append to the request.",
+          additionalProperties: {
+            oneOf: [
+              { type: "string" },
+              { type: "number" },
+              { type: "boolean" },
+              { type: "array", items: { oneOf: [{ type: "string" }, { type: "number" }, { type: "boolean" }] } }
+            ]
+          },
+        },
+        body: {
+          description: "Optional JSON body for write operations (POST/PUT/PATCH).",
+          oneOf: [
+            { type: "object" },
+            { type: "array" },
+            { type: "string" },
+            { type: "number" },
+            { type: "boolean" },
+            { type: "null" },
+          ],
+        },
+      },
+      required: ["method", "path"],
+    },
+  },
 ];
 
 // Tool mapping to actual functions
@@ -985,6 +1028,7 @@ const toolMapping: Record<string, (...args: any[]) => Promise<any>> = {
   updateCondition,
   searchConditions,
   generalFhirSearch,
+  callMedplumApi,
 };
 
 // Handle list tools request
