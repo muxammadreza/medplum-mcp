@@ -69,6 +69,18 @@ import {
 import {
   generalFhirSearch,
 } from './tools/generalFhirSearchUtils.js';
+import {
+  createDiagnosticReport,
+  getDiagnosticReportById,
+  updateDiagnosticReport,
+  searchDiagnosticReports,
+} from './tools/diagnosticReportUtils.js';
+import {
+  createProcedure,
+  getProcedureById,
+  updateProcedure,
+  searchProcedures,
+} from './tools/procedureUtils.js';
 
 // Load environment variables
 dotenv.config();
@@ -917,6 +929,264 @@ const mcpTools = [
       required: ["patientId"],
     },
   },
+  // DiagnosticReport Tools
+  {
+    name: "createDiagnosticReport",
+    description: "Creates a new diagnostic report for a patient. Requires status, code, and patient reference.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        status: {
+          type: "string",
+          description: "The status of the diagnostic report.",
+          enum: ["registered", "partial", "preliminary", "final", "amended", "corrected", "appended", "cancelled", "entered-in-error", "unknown"],
+        },
+        code: {
+          type: "object",
+          description: "The code describing the diagnostic report.",
+        },
+        subjectId: {
+          type: "string",
+          description: "The ID of the patient this report is about.",
+        },
+        encounterId: {
+          type: "string",
+          description: "Optional encounter context for the report.",
+        },
+        effectiveDateTime: {
+          type: "string",
+          description: "Optional date/time the report is effective.",
+        },
+        conclusion: {
+          type: "string",
+          description: "Optional narrative conclusion.",
+        },
+        performerIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional list of practitioner IDs who performed the service.",
+        },
+        resultIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional observation IDs that are results in this report.",
+        },
+      },
+      required: ["status", "code", "subjectId"],
+    },
+  },
+  {
+    name: "getDiagnosticReportById",
+    description: "Retrieves a diagnostic report resource by its unique ID.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        diagnosticReportId: {
+          type: "string",
+          description: "The unique ID of the diagnostic report to retrieve.",
+        },
+      },
+      required: ["diagnosticReportId"],
+    },
+  },
+  {
+    name: "updateDiagnosticReport",
+    description: "Updates an existing diagnostic report. Requires the report ID and fields to update.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        diagnosticReportId: {
+          type: "string",
+          description: "The unique ID of the diagnostic report to update.",
+        },
+        status: {
+          type: "string",
+          description: "Updated status for the diagnostic report.",
+          enum: ["registered", "partial", "preliminary", "final", "amended", "corrected", "appended", "cancelled", "entered-in-error", "unknown"],
+        },
+        conclusion: {
+          type: "string",
+          description: "Updated conclusion text.",
+        },
+        effectiveDateTime: {
+          type: "string",
+          description: "Updated effective date/time.",
+        },
+        encounterId: {
+          type: "string",
+          description: "Updated encounter reference.",
+        },
+        performerIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Updated list of performers.",
+        },
+        resultIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Updated result observation IDs.",
+        },
+      },
+      required: ["diagnosticReportId"],
+    },
+  },
+  {
+    name: "searchDiagnosticReports",
+    description: "Searches for diagnostic reports based on patient, code, status, or date criteria.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        patientId: {
+          type: "string",
+          description: "The patient ID to search diagnostic reports for.",
+        },
+        code: {
+          type: "string",
+          description: "Code filter for the diagnostic report.",
+        },
+        status: {
+          type: "string",
+          description: "Status filter for the diagnostic report.",
+          enum: ["registered", "partial", "preliminary", "final", "amended", "corrected", "appended", "cancelled", "entered-in-error", "unknown"],
+        },
+        date: {
+          type: "string",
+          description: "Date filter for the diagnostic report (single date or range).",
+        },
+        encounterId: {
+          type: "string",
+          description: "Encounter filter for the diagnostic report.",
+        },
+      },
+      required: [],
+    },
+  },
+  // Procedure Tools
+  {
+    name: "createProcedure",
+    description: "Creates a new procedure record for a patient. Requires status, code, and patient reference.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        status: {
+          type: "string",
+          description: "The status of the procedure.",
+          enum: ["preparation", "in-progress", "not-done", "on-hold", "stopped", "completed", "entered-in-error", "unknown"],
+        },
+        code: {
+          type: "object",
+          description: "The code describing the procedure performed.",
+        },
+        subjectId: {
+          type: "string",
+          description: "The ID of the patient this procedure is about.",
+        },
+        encounterId: {
+          type: "string",
+          description: "Optional encounter context for the procedure.",
+        },
+        performedDateTime: {
+          type: "string",
+          description: "Optional date/time the procedure was performed.",
+        },
+        performerIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional list of practitioner IDs who performed the procedure.",
+        },
+        note: {
+          type: "string",
+          description: "Optional note about the procedure.",
+        },
+      },
+      required: ["status", "code", "subjectId"],
+    },
+  },
+  {
+    name: "getProcedureById",
+    description: "Retrieves a procedure resource by its unique ID.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        procedureId: {
+          type: "string",
+          description: "The unique ID of the procedure to retrieve.",
+        },
+      },
+      required: ["procedureId"],
+    },
+  },
+  {
+    name: "updateProcedure",
+    description: "Updates an existing procedure. Requires the procedure ID and fields to update.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        procedureId: {
+          type: "string",
+          description: "The unique ID of the procedure to update.",
+        },
+        status: {
+          type: "string",
+          description: "Updated status for the procedure.",
+          enum: ["preparation", "in-progress", "not-done", "on-hold", "stopped", "completed", "entered-in-error", "unknown"],
+        },
+        performedDateTime: {
+          type: "string",
+          description: "Updated performed date/time.",
+        },
+        encounterId: {
+          type: "string",
+          description: "Updated encounter reference.",
+        },
+        performerIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Updated list of performers.",
+        },
+        note: {
+          type: "string",
+          description: "Updated note for the procedure.",
+        },
+      },
+      required: ["procedureId"],
+    },
+  },
+  {
+    name: "searchProcedures",
+    description: "Searches for procedures based on patient, code, status, or date criteria.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        patientId: {
+          type: "string",
+          description: "The patient ID to search procedures for.",
+        },
+        code: {
+          type: "string",
+          description: "Code filter for the procedure.",
+        },
+        status: {
+          type: "string",
+          description: "Status filter for the procedure.",
+          enum: ["preparation", "in-progress", "not-done", "on-hold", "stopped", "completed", "entered-in-error", "unknown"],
+        },
+        date: {
+          type: "string",
+          description: "Date filter for the procedure (single date or range).",
+        },
+        encounterId: {
+          type: "string",
+          description: "Encounter filter for the procedure.",
+        },
+        performer: {
+          type: "string",
+          description: "Performer reference filter for the procedure.",
+        },
+      },
+      required: [],
+    },
+  },
   // General FHIR Search Tool
   {
     name: "generalFhirSearch",
@@ -985,6 +1255,14 @@ const toolMapping: Record<string, (...args: any[]) => Promise<any>> = {
   updateCondition,
   searchConditions,
   generalFhirSearch,
+  createDiagnosticReport,
+  getDiagnosticReportById,
+  updateDiagnosticReport,
+  searchDiagnosticReports,
+  createProcedure,
+  getProcedureById,
+  updateProcedure,
+  searchProcedures,
 };
 
 // Handle list tools request
@@ -1021,28 +1299,47 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         result = await toolFunction(args[idKey]);
       } else if (toolName.startsWith('update')) {
         // Update tools that take ID and updates object
-        const { patientId, practitionerId, organizationId, encounterId, observationId, medicationRequestId, medicationId, episodeOfCareId, conditionId, ...updates } = args;
-        const id = patientId || practitionerId || organizationId || encounterId || observationId || medicationRequestId || medicationId || episodeOfCareId || conditionId;
+        const idKeys = [
+          'patientId',
+          'practitionerId',
+          'organizationId',
+          'encounterId',
+          'observationId',
+          'medicationRequestId',
+          'medicationId',
+          'episodeOfCareId',
+          'conditionId',
+          'diagnosticReportId',
+          'procedureId',
+        ];
+        const id = idKeys
+          .map((key) => (args as any)[key])
+          .find((value) => value !== undefined && value !== null);
+        const updates = { ...args };
+        idKeys.forEach((key) => delete (updates as any)[key]);
+        if (!id) {
+          throw new Error('ID parameter is required for update tools');
+        }
         
-                 // Special handling for updateCondition
-         if (toolName === 'updateCondition') {
-           const updateArgs: any = { id };
-           if ((updates as any).clinicalStatus) {
-             const key = ((updates as any).clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
-             updateArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
-           }
-           if ((updates as any).verificationStatus) {
-             const verStatusMap: { [key: string]: string } = { 'entered-in-error': 'ENTERED-IN-ERROR' };
-             const key = (verStatusMap[(updates as any).verificationStatus] || ((updates as any).verificationStatus as string).toUpperCase()) as keyof typeof ConditionVerificationStatusCodes;
-             updateArgs.verificationStatus = { coding: [ConditionVerificationStatusCodes[key]] };
-           }
-           if ((updates as any).onsetString !== undefined) {
-             updateArgs.onsetString = (updates as any).onsetString;
-           }
-           result = await toolFunction(updateArgs);
-         } else {
-           result = await toolFunction(id, updates);
-         }
+        // Special handling for updateCondition
+        if (toolName === 'updateCondition') {
+          const updateArgs: any = { id };
+          if ((updates as any).clinicalStatus) {
+            const key = ((updates as any).clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
+            updateArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
+          }
+          if ((updates as any).verificationStatus) {
+            const verStatusMap: { [key: string]: string } = { 'entered-in-error': 'ENTERED-IN-ERROR' };
+            const key = (verStatusMap[(updates as any).verificationStatus] || ((updates as any).verificationStatus as string).toUpperCase()) as keyof typeof ConditionVerificationStatusCodes;
+            updateArgs.verificationStatus = { coding: [ConditionVerificationStatusCodes[key]] };
+          }
+          if ((updates as any).onsetString !== undefined) {
+            updateArgs.onsetString = (updates as any).onsetString;
+          }
+          result = await toolFunction(updateArgs);
+        } else {
+          result = await toolFunction(id, updates);
+        }
        } else if (toolName === 'createCondition') {
          // Special handling for createCondition
          const { patientId, code, clinicalStatus, onsetString, recordedDate } = args;
