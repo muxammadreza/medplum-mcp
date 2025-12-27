@@ -10,6 +10,7 @@
 ## Installation
 
 1. **Clone and build the Medplum MCP server:**
+
    ```bash
    git clone <repository-url>
    cd medplum-mcp
@@ -18,8 +19,9 @@
    ```
 
 2. **Configure environment variables:**
-   
+
    Create a `.env` file in the project root with your Medplum credentials:
+
    ```env
    MEDPLUM_BASE_URL=http://localhost:8103/
    MEDPLUM_CLIENT_ID=your_actual_client_id
@@ -34,6 +36,7 @@
 ## Claude Desktop Configuration
 
 1. **Open Claude Desktop Settings:**
+
    - On macOS: Claude menu → Settings → Developer
    - On Windows: File menu → Settings → Developer
 
@@ -41,16 +44,15 @@
    Click "Edit Config" to open the configuration file.
 
 3. **Add the Medplum MCP server configuration:**
-   
+
    Replace the contents with:
+
    ```json
    {
      "mcpServers": {
        "medplum-mcp": {
          "command": "node",
-         "args": [
-           "/absolute/path/to/medplum-mcp/dist/index.js"
-         ],
+         "args": ["/absolute/path/to/medplum-mcp/dist/index.js"],
          "env": {
            "MEDPLUM_BASE_URL": "http://localhost:8103/",
            "MEDPLUM_CLIENT_ID": "your_actual_client_id",
@@ -61,7 +63,8 @@
    }
    ```
 
-   **Important:** 
+   **Important:**
+
    - Replace `/absolute/path/to/medplum-mcp/` with the actual absolute path to your project
    - Replace the environment variables with your actual Medplum credentials
 
@@ -80,12 +83,14 @@ After restarting Claude Desktop, you should see:
 The Medplum MCP server provides comprehensive FHIR resource management tools:
 
 ### Patient Management
+
 - `createPatient` - Create new patient records
 - `getPatientById` - Retrieve patient by ID
 - `updatePatient` - Update patient information
 - `searchPatients` - Search patients by criteria
 
 ### Practitioner Management
+
 - `createPractitioner` - Register new practitioners
 - `getPractitionerById` - Retrieve practitioner by ID
 - `updatePractitioner` - Update practitioner information
@@ -93,24 +98,28 @@ The Medplum MCP server provides comprehensive FHIR resource management tools:
 - `searchPractitionersByName` - Search by name specifically
 
 ### Organization Management
+
 - `createOrganization` - Add new healthcare organizations
 - `getOrganizationById` - Retrieve organization by ID
 - `updateOrganization` - Update organization information
 - `searchOrganizations` - Search organizations
 
 ### Encounter Management
+
 - `createEncounter` - Create new patient encounters
 - `getEncounterById` - Retrieve encounter by ID
 - `updateEncounter` - Update encounter information
 - `searchEncounters` - Search encounters
 
 ### Observation Management
+
 - `createObservation` - Record new observations (lab results, vitals)
 - `getObservationById` - Retrieve observation by ID
 - `updateObservation` - Update observation information
 - `searchObservations` - Search observations
 
 ### General FHIR Search
+
 - `generalFhirSearch` - Perform generic FHIR searches on any resource type
 
 ## Example Usage
@@ -125,17 +134,20 @@ Once configured, you can interact with your Medplum FHIR server through natural 
 ## Troubleshooting
 
 ### Server not appearing in Claude
+
 1. Check that the path in the configuration is absolute and correct
 2. Ensure the server builds successfully (`npm run build`)
 3. Verify your Medplum credentials are correct
 4. Restart Claude Desktop completely
 
 ### Authentication errors
+
 1. Verify your `MEDPLUM_CLIENT_ID` and `MEDPLUM_CLIENT_SECRET` are correct
 2. Ensure your Medplum server is running and accessible
 3. Check that the client has appropriate permissions
 
 ### Tool execution errors
+
 1. Verify your Medplum server is running
 2. Check the Claude Desktop logs for detailed error messages
 3. Test the connection using `npm run test:connection`
@@ -143,7 +155,8 @@ Once configured, you can interact with your Medplum FHIR server through natural 
 ## Logs
 
 Claude Desktop logs can be found at:
+
 - macOS: `~/Library/Logs/Claude/`
 - Windows: `%APPDATA%\Claude\logs\`
 
-Look for `mcp-server-medplum-mcp.log` for server-specific logs. 
+Look for `mcp-server-medplum-mcp.log` for server-specific logs.

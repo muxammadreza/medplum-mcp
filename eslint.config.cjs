@@ -43,12 +43,12 @@ module.exports = tseslint.config(
   {
     files: ['tests/**/*.ts'],
     rules: {
-        '@typescript-eslint/unbound-method': 'off', // Jest mocks trigger this
-        '@typescript-eslint/no-unsafe-assignment': 'off', // Tests often need lax typing for mocks
-        '@typescript-eslint/no-unsafe-call': 'off',
-        '@typescript-eslint/no-unsafe-member-access': 'off',
-        'no-console': 'off', // Allow console in tests for debugging if needed, though warn is better usually. Let's keep warn but maybe relax for specific files if needed.
-    }
+      '@typescript-eslint/unbound-method': 'off', // Jest mocks trigger this
+      '@typescript-eslint/no-unsafe-assignment': 'off', // Tests often need lax typing for mocks
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      'no-console': 'off', // Allow console in tests for debugging if needed, though warn is better usually. Let's keep warn but maybe relax for specific files if needed.
+    },
   },
   prettierConfig,
   {
@@ -59,5 +59,5 @@ module.exports = tseslint.config(
     rules: {
       'prettier/prettier': 'warn',
     },
-  }
+  },
 );

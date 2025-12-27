@@ -28,6 +28,10 @@ import * as authUtils from './authUtils';
 import * as operationsUtils from './operationsUtils';
 import * as adminUtils from './adminUtils';
 import * as superAdminUtils from './superAdminUtils';
+import * as advancedUtils from './advancedUtils';
+import * as dataUtils from './dataUtils';
+import * as versionUtils from './versionUtils';
+import * as miscUtils from './miscUtils';
 
 // Map of resource type to specific utils
 const specificUtils: Record<string, any> = {
@@ -278,6 +282,309 @@ toolDefinitions.push({
   },
 });
 toolMapping['forceSetPassword'] = superAdminUtils.forceSetPassword;
+
+// Register Advanced Utils
+toolDefinitions.push({
+  name: 'executeBot',
+  description: 'Executes a Bot.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      botId: { type: 'string' },
+      data: { type: 'object' },
+      contentType: { type: 'string' },
+    },
+    required: ['botId', 'data'],
+  },
+});
+toolMapping['executeBot'] = advancedUtils.executeBot;
+
+toolDefinitions.push({
+  name: 'graphql',
+  description: 'Executes a GraphQL query.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      query: { type: 'string' },
+      operationName: { type: 'string' },
+      variables: { type: 'object' },
+    },
+    required: ['query'],
+  },
+});
+toolMapping['graphql'] = advancedUtils.graphql;
+
+toolDefinitions.push({
+  name: 'pushToAgent',
+  description: 'Pushes a message to an Agent.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      agentId: { type: 'string' },
+      body: { type: 'string' },
+      contentType: { type: 'string' },
+      destination: { type: 'string' },
+      waitForResponse: { type: 'boolean' },
+    },
+    required: ['agentId', 'body'],
+  },
+});
+toolMapping['pushToAgent'] = advancedUtils.pushToAgent;
+
+// Register Data Utils
+toolDefinitions.push({
+  name: 'bulkExport',
+  description: 'Starts a bulk export job.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceTypes: { type: 'array', items: { type: 'string' } },
+      since: { type: 'string' },
+      outputFormat: { type: 'string' },
+    },
+  },
+});
+toolMapping['bulkExport'] = dataUtils.bulkExport;
+
+toolDefinitions.push({
+  name: 'readPatientEverything',
+  description: 'Reads all data for a patient.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      patientId: { type: 'string' },
+    },
+    required: ['patientId'],
+  },
+});
+toolMapping['readPatientEverything'] = dataUtils.readPatientEverything;
+
+toolDefinitions.push({
+  name: 'readPatientSummary',
+  description: 'Reads a summary for a patient.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      patientId: { type: 'string' },
+    },
+    required: ['patientId'],
+  },
+});
+toolMapping['readPatientSummary'] = dataUtils.readPatientSummary;
+
+toolDefinitions.push({
+  name: 'readResourceGraph',
+  description: 'Reads a graph of resources connected to a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['readResourceGraph'] = dataUtils.readResourceGraph;
+
+toolDefinitions.push({
+  name: 'requestSchema',
+  description: 'Requests the schema for a resource type.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+    },
+    required: ['resourceType'],
+  },
+});
+toolMapping['requestSchema'] = dataUtils.requestSchema;
+
+// Register Version Utils
+toolDefinitions.push({
+  name: 'readHistory',
+  description: 'Reads the history of a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['readHistory'] = versionUtils.readHistory;
+
+toolDefinitions.push({
+  name: 'readVersion',
+  description: 'Reads a specific version of a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+      vid: { type: 'string' },
+    },
+    required: ['resourceType', 'id', 'vid'],
+  },
+});
+toolMapping['readVersion'] = versionUtils.readVersion;
+
+// Register Misc Utils
+toolDefinitions.push({
+  name: 'upsertResource',
+  description: 'Upserts a resource (update if exists, create if not).',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resource: { type: 'object' },
+      search: { type: 'object' },
+    },
+    required: ['resource'],
+  },
+});
+toolMapping['upsertResource'] = miscUtils.upsertResource;
+
+toolDefinitions.push({
+  name: 'createComment',
+  description: 'Creates a comment on a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+      text: { type: 'string' },
+    },
+    required: ['resourceType', 'id', 'text'],
+  },
+});
+toolMapping['createComment'] = miscUtils.createComment;
+
+toolDefinitions.push({
+  name: 'startNewProject',
+  description: 'Starts a new project.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      login: { type: 'string' },
+      projectName: { type: 'string' },
+    },
+    required: ['login', 'projectName'],
+  },
+});
+toolMapping['startNewProject'] = miscUtils.startNewProject;
+
+toolDefinitions.push({
+  name: 'startNewUser',
+  description: 'Starts a new user.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      user: { type: 'object' },
+    },
+    required: ['user'],
+  },
+});
+toolMapping['startNewUser'] = miscUtils.startNewUser;
+
+toolDefinitions.push({
+  name: 'startNewPatient',
+  description: 'Starts a new patient.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      patient: { type: 'object' },
+    },
+    required: ['patient'],
+  },
+});
+toolMapping['startNewPatient'] = miscUtils.startNewPatient;
+
+toolDefinitions.push({
+  name: 'getProject',
+  description: 'Gets the current project details.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['getProject'] = miscUtils.getProject;
+
+toolDefinitions.push({
+  name: 'getProfile',
+  description: 'Gets the current user profile.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['getProfile'] = miscUtils.getProfile;
+
+toolDefinitions.push({
+  name: 'createResourceIfNoneExist',
+  description: 'Creates a resource if it does not exist.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resource: { type: 'object' },
+      query: { type: 'string' },
+    },
+    required: ['resource', 'query'],
+  },
+});
+toolMapping['createResourceIfNoneExist'] = miscUtils.createResourceIfNoneExist;
+
+toolDefinitions.push({
+  name: 'createMedia',
+  description: 'Creates a Media resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      content: { type: 'object' },
+      contentType: { type: 'string' },
+      filename: { type: 'string' },
+    },
+    required: ['content', 'contentType'],
+  },
+});
+toolMapping['createMedia'] = miscUtils.createMedia;
+
+toolDefinitions.push({
+  name: 'createAttachment',
+  description: 'Creates an Attachment.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      data: { type: 'object' },
+      contentType: { type: 'string' },
+      filename: { type: 'string' },
+    },
+    required: ['data', 'contentType'],
+  },
+});
+toolMapping['createAttachment'] = miscUtils.createAttachment;
+
+toolDefinitions.push({
+  name: 'uploadMedia',
+  description: 'Uploads media.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      data: { type: 'object' },
+      contentType: { type: 'string' },
+      filename: { type: 'string' },
+    },
+    required: ['data', 'contentType'],
+  },
+});
+toolMapping['uploadMedia'] = miscUtils.uploadMedia;
+
+toolDefinitions.push({
+  name: 'fhircastPublish',
+  description: 'Publishes a FHIRcast event.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      topic: { type: 'string' },
+      event: { type: 'object' },
+    },
+    required: ['topic', 'event'],
+  },
+});
+toolMapping['fhircastPublish'] = miscUtils.fhircastPublish;
 
 // 1. Add Specific Tools first
 const specificToolNames = new Set(specificToolDefinitions.map((t) => t.name));

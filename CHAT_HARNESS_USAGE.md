@@ -7,6 +7,7 @@ The MCP Chat Test Harness provides an interactive command-line interface to test
 ## Prerequisites
 
 1. **Environment Setup**: Ensure your `.env` file contains:
+
    ```
    MEDPLUM_BASE_URL=http://localhost:8103/
    MEDPLUM_CLIENT_ID=your_client_id
@@ -16,7 +17,7 @@ The MCP Chat Test Harness provides an interactive command-line interface to test
 
 2. **Medplum Server**: Have your Medplum server running (e.g., at `http://localhost:8103/`)
 
-3. **Build the Project**: 
+3. **Build the Project**:
    ```bash
    npm run build
    ```
@@ -24,16 +25,19 @@ The MCP Chat Test Harness provides an interactive command-line interface to test
 ## Running the Chat Harness
 
 ### Option 1: Using the npm script (recommended)
+
 ```bash
 npm run chat
 ```
 
 ### Option 2: Direct execution
+
 ```bash
 node dist/llm-test-harness.js
 ```
 
 ### Option 3: Development mode
+
 ```bash
 npx ts-node src/llm-test-harness.ts
 ```
@@ -49,6 +53,7 @@ npx ts-node src/llm-test-harness.ts
 ## Available Commands
 
 ### Chat Commands
+
 - **Natural language queries**: Ask questions about healthcare data management
 - **`help`**: Show detailed examples of what you can ask
 - **`tools`**: Display all available MCP tools
@@ -58,6 +63,7 @@ npx ts-node src/llm-test-harness.ts
 ### Example Queries
 
 #### Patient Management
+
 ```
 🏥 You: Create a new patient Jane Smith born 1985-03-20
 🏥 You: Find all patients with last name Johnson
@@ -66,6 +72,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 #### Practitioner Management
+
 ```
 🏥 You: Find all doctors named Stevens
 🏥 You: Create a new practitioner Dr. Emily Wilson
@@ -74,6 +81,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 #### Organization Management
+
 ```
 🏥 You: Create a new hospital called City General
 🏥 You: Find organizations in downtown area
@@ -81,6 +89,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 #### Clinical Data
+
 ```
 🏥 You: Create a blood pressure observation for patient ID pat123
 🏥 You: Find all lab results for patient ID pat456
@@ -89,6 +98,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 #### Medications
+
 ```
 🏥 You: Create a new medication for hypertension
 🏥 You: Find all medications containing aspirin
@@ -96,6 +106,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 #### General Searches
+
 ```
 🏥 You: Search for all encounters this month
 🏥 You: Find all active episodes of care
@@ -105,6 +116,7 @@ npx ts-node src/llm-test-harness.ts
 ## What You'll See
 
 ### Successful Tool Execution
+
 ```
 🤖 Processing: "Find all patients named Smith"
 
@@ -132,6 +144,7 @@ npx ts-node src/llm-test-harness.ts
 ```
 
 ### Error Handling
+
 ```
 🔧 LLM wants to call 1 tool(s):
    📞 Calling getPatientById with args: { "patientId": "invalid-id" }
@@ -144,12 +157,14 @@ npx ts-node src/llm-test-harness.ts
 
 ### Common Issues
 
-1. **Connection Failed**: 
+1. **Connection Failed**:
+
    - Ensure Medplum server is running
    - Check your `.env` file configuration
    - Verify client credentials
 
 2. **OpenAI API Errors**:
+
    - Verify `OPENAI_API_KEY` is set correctly
    - Check your OpenAI account has sufficient credits
 
@@ -159,7 +174,9 @@ npx ts-node src/llm-test-harness.ts
    - Verify proper resource relationships
 
 ### Debug Mode
+
 Add `console.log` statements in the harness or use the MCP Inspector for detailed debugging:
+
 ```bash
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
@@ -185,4 +202,4 @@ npx @modelcontextprotocol/inspector node dist/index.js
 └─────────────────┘
 ```
 
-This harness provides a complete testing environment for your MCP server, allowing you to verify that all tools work correctly and can be accessed through natural language interactions. 
+This harness provides a complete testing environment for your MCP server, allowing you to verify that all tools work correctly and can be accessed through natural language interactions.

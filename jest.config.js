@@ -16,4 +16,4 @@ module.exports = {
     '<rootDir>/tests',
     '<rootDir>/src', // Also include src if you plan to put unit tests alongside source files later
   ],
-}; 
+};
