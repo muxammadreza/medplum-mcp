@@ -6,7 +6,7 @@ import {
   searchOrganizations,
   CreateOrganizationArgs,
   UpdateOrganizationArgs,
-  OrganizationSearchCriteria
+  OrganizationSearchCriteria,
 } from '../../src/tools/organizationUtils';
 import { Organization } from '@medplum/fhirtypes';
 
@@ -42,10 +42,14 @@ describe('Organization Tools Integration Tests', () => {
       const orgDetails: CreateOrganizationArgs = {
         name: testOrgFullName,
         alias: [`ITO${uniqueTimestamp}`],
-        contact: [{
-          purpose: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/contactentity-type', code: 'ADMIN' }] },
-          telecom: [{ system: 'phone', value: '555-0123', use: 'work' }]
-        }]
+        contact: [
+          {
+            purpose: {
+              coding: [{ system: 'http://terminology.hl7.org/CodeSystem/contactentity-type', code: 'ADMIN' }],
+            },
+            telecom: [{ system: 'phone', value: '555-0123', use: 'work' }],
+          },
+        ],
       };
       const organization = await createOrganization(orgDetails);
       expect(organization).toBeDefined();
@@ -76,10 +80,12 @@ describe('Organization Tools Integration Tests', () => {
       expect(createdOrgId).toBeDefined();
       const updates: UpdateOrganizationArgs = {
         alias: [`ITO${uniqueTimestamp}`, `UpdatedITO${uniqueTimestamp}`],
-        contact: [{
-          purpose: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/contactentity-type', code: 'BILL' }] },
-          telecom: [{ system: 'email', value: `org${uniqueTimestamp}@example.com`, use: 'work' }]
-        }]
+        contact: [
+          {
+            purpose: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/contactentity-type', code: 'BILL' }] },
+            telecom: [{ system: 'email', value: `org${uniqueTimestamp}@example.com`, use: 'work' }],
+          },
+        ],
       };
       const updatedOrganization = await updateOrganization(createdOrgId!, updates);
       expect(updatedOrganization).toBeDefined();
@@ -96,15 +102,17 @@ describe('Organization Tools Integration Tests', () => {
       expect(organizations).toBeDefined();
       expect(organizations.length).toBeGreaterThanOrEqual(1);
       // Note: searchOrganizations returns Organization[], not BundleEntry<Organization>[], so we access resource directly
-      expect(organizations.some(org => org.id === createdOrgId)).toBe(true);
+      expect(organizations.some((org) => org.id === createdOrgId)).toBe(true);
     });
 
     it('should find an organization by partial name', async () => {
-      const criteria: OrganizationSearchCriteria = { name: `${testOrgBaseName}${uniqueTimestamp.toString().substring(0,5)}` }; // Partial match
+      const criteria: OrganizationSearchCriteria = {
+        name: `${testOrgBaseName}${uniqueTimestamp.toString().substring(0, 5)}`,
+      }; // Partial match
       const organizations = await searchOrganizations(criteria);
       expect(organizations).toBeDefined();
       expect(organizations.length).toBeGreaterThanOrEqual(1);
-      expect(organizations.some(org => org.id === createdOrgId)).toBe(true);
+      expect(organizations.some((org) => org.id === createdOrgId)).toBe(true);
     });
 
     it('should return an empty array if no criteria match', async () => {
@@ -114,4 +122,4 @@ describe('Organization Tools Integration Tests', () => {
       expect(organizations.length).toBe(0);
     });
   });
-}); 
+});

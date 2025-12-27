@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
 import { Practitioner, OperationOutcome, HumanName, Identifier, ContactPoint } from '@medplum/fhirtypes';
 import { normalizeErrorString } from '@medplum/core';
@@ -14,9 +19,7 @@ interface PractitionerNameSearchParams {
  * @param params - The search parameters for the practitioner's name.
  * @returns A promise that resolves to an array of Practitioner resources.
  */
-export async function searchPractitionersByName(
-  params: PractitionerNameSearchParams
-): Promise<Practitioner[]> {
+export async function searchPractitionersByName(params: PractitionerNameSearchParams): Promise<Practitioner[]> {
   await ensureAuthenticated();
 
   const searchCriteria: string[] = [];
@@ -41,7 +44,7 @@ export async function searchPractitionersByName(
 
 export interface CreatePractitionerArgs {
   family?: string;
-  given?: string[]; 
+  given?: string[];
   gender?: 'male' | 'female' | 'other' | 'unknown';
   birthDate?: string;
   // phone?: string; // Deprecate in favor of telecom array
@@ -66,7 +69,7 @@ export async function createPractitioner(args: CreatePractitionerArgs): Promise<
   // Handle backward compatibility
   let family = args.family;
   let given = args.given;
-  
+
   if (args.familyName && !family) {
     family = args.familyName;
   }
@@ -83,10 +86,12 @@ export async function createPractitioner(args: CreatePractitionerArgs): Promise<
 
   const practitionerResource: Practitioner = {
     resourceType: 'Practitioner',
-    name: [{
-      family: family,
-      given: given,
-    }],
+    name: [
+      {
+        family: family,
+        given: given,
+      },
+    ],
     active: true,
   };
 
@@ -132,10 +137,10 @@ export interface GetPractitionerByIdArgs {
  */
 export async function getPractitionerById(args: GetPractitionerByIdArgs | string): Promise<Practitioner | null> {
   await ensureAuthenticated();
-  
+
   // Handle both string and object parameter formats
   const practitionerId = typeof args === 'string' ? args : args.practitionerId;
-  
+
   if (!practitionerId) {
     throw new Error('Practitioner ID is required to fetch a practitioner.');
   }
@@ -160,7 +165,10 @@ export interface UpdatePractitionerArgs extends Omit<Partial<Practitioner>, 'res
  * @param updates - The partial data to update the practitioner with.
  * @returns The updated Practitioner resource.
  */
-export async function updatePractitioner(practitionerId: string, updates: UpdatePractitionerArgs): Promise<Practitioner> {
+export async function updatePractitioner(
+  practitionerId: string,
+  updates: UpdatePractitionerArgs,
+): Promise<Practitioner> {
   await ensureAuthenticated();
 
   if (!practitionerId) {
@@ -174,22 +182,22 @@ export async function updatePractitioner(practitionerId: string, updates: Update
   if (!existingPractitioner) {
     throw new Error(`Practitioner with ID ${practitionerId} not found.`);
   }
-  
-  const { resourceType, id, ...safeUpdates } = updates as any; 
+
+  const { resourceType, id, ...safeUpdates } = updates as any;
 
   const practitionerToUpdate: Practitioner = {
     ...existingPractitioner,
     ...safeUpdates,
-    resourceType: 'Practitioner', 
-    id: practitionerId, 
+    resourceType: 'Practitioner',
+    id: practitionerId,
   };
-  
+
   return medplum.updateResource(practitionerToUpdate);
 }
 
 export interface PractitionerSearchCriteria {
   identifier?: string; // Search by identifier (e.g., NPI)
-  name?: string;       // General name search
+  name?: string; // General name search
   givenName?: string;
   familyName?: string;
   addressCity?: string;
@@ -216,11 +224,11 @@ export async function searchPractitioners(criteria: PractitionerSearchCriteria):
   if (criteria.addressState) searchParams.push(`address-state:contains=${criteria.addressState}`);
   if (criteria.telecom) searchParams.push(`telecom=${criteria.telecom}`);
   if (criteria._lastUpdated) searchParams.push(`_lastUpdated=${criteria._lastUpdated}`);
-  
+
   if (searchParams.length === 0) {
     return [];
   }
 
   const queryString = searchParams.join('&');
   return medplum.searchResources('Practitioner', queryString);
-} 
+}

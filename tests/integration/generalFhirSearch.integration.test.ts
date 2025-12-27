@@ -25,9 +25,9 @@ describe('generalFhirSearch Integration Tests', () => {
       active: true,
     });
     testPractitioner1 = await medplum.createResource<Practitioner>({
-        resourceType: 'Practitioner',
-        name: [{ family: 'GeneralSearchDoc', given: ['Test']}],
-        active: true,
+      resourceType: 'Practitioner',
+      name: [{ family: 'GeneralSearchDoc', given: ['Test'] }],
+      active: true,
     });
     testObservation1 = await medplum.createResource<Observation>({
       resourceType: 'Observation',
@@ -61,8 +61,8 @@ describe('generalFhirSearch Integration Tests', () => {
     expect(result.resourceType).toBe('Bundle');
     const bundle = result as Bundle<Patient>; // Type assertion for Patient
     expect(bundle.entry?.length).toBeGreaterThanOrEqual(2);
-    expect(bundle.entry?.some(e => e.resource?.id === testPatient1.id)).toBeTruthy();
-    expect(bundle.entry?.some(e => e.resource?.id === testPatient2.id)).toBeTruthy();
+    expect(bundle.entry?.some((e) => e.resource?.id === testPatient1.id)).toBeTruthy();
+    expect(bundle.entry?.some((e) => e.resource?.id === testPatient2.id)).toBeTruthy();
   });
 
   test('should successfully search for active Patients', async () => {
@@ -72,10 +72,10 @@ describe('generalFhirSearch Integration Tests', () => {
     };
     const result = await generalFhirSearch(args);
     expect(result.resourceType).toBe('Bundle');
-    const bundle = result as Bundle<Patient>; 
+    const bundle = result as Bundle<Patient>;
     expect(bundle.entry?.length).toBeGreaterThanOrEqual(1);
-    expect(bundle.entry?.some(e => e.resource?.id === testPatient2.id)).toBeTruthy();
-    expect(bundle.entry?.every(e => e.resource?.active === true)).toBeTruthy();
+    expect(bundle.entry?.some((e) => e.resource?.id === testPatient2.id)).toBeTruthy();
+    expect(bundle.entry?.every((e) => e.resource?.active === true)).toBeTruthy();
   });
 
   test('should successfully search for Observations by patient and code', async () => {
@@ -88,21 +88,21 @@ describe('generalFhirSearch Integration Tests', () => {
     };
     const result = await generalFhirSearch(args);
     expect(result.resourceType).toBe('Bundle');
-    const bundle = result as Bundle<Observation>; 
+    const bundle = result as Bundle<Observation>;
     expect(bundle.entry?.length).toBe(1);
     expect(bundle.entry?.[0]?.resource?.id).toBe(testObservation1.id);
   });
-  
+
   test('should search for Practitioners by name', async () => {
     const args: GeneralFhirSearchArgs = {
-        resourceType: 'Practitioner',
-        queryParams: { name: 'GeneralSearchDoc' }
+      resourceType: 'Practitioner',
+      queryParams: { name: 'GeneralSearchDoc' },
     };
     const result = await generalFhirSearch(args);
     expect(result.resourceType).toBe('Bundle');
-    const bundle = result as Bundle<Practitioner>; 
+    const bundle = result as Bundle<Practitioner>;
     expect(bundle.entry?.length).toBeGreaterThanOrEqual(1);
-    expect(bundle.entry?.some(e => e.resource?.id === testPractitioner1.id)).toBeTruthy();
+    expect(bundle.entry?.some((e) => e.resource?.id === testPractitioner1.id)).toBeTruthy();
   });
 
   test('should handle array query parameters (e.g., multiple _id)', async () => {
@@ -112,9 +112,9 @@ describe('generalFhirSearch Integration Tests', () => {
     };
     const result = await generalFhirSearch(args);
     expect(result.resourceType).toBe('Bundle');
-    const bundle = result as Bundle<Patient>; 
+    const bundle = result as Bundle<Patient>;
     expect(bundle.entry?.length).toBe(2);
-    const ids = bundle.entry?.map(e => e.resource?.id).sort();
+    const ids = bundle.entry?.map((e) => e.resource?.id).sort();
     expect(ids).toEqual([testPatient1.id, testPatient2.id].sort());
   });
 
@@ -125,7 +125,7 @@ describe('generalFhirSearch Integration Tests', () => {
     };
     const result = await generalFhirSearch(args);
     expect(result.resourceType).toBe('Bundle');
-    const bundle = result as Bundle<Patient>; 
+    const bundle = result as Bundle<Patient>;
     expect(bundle.entry?.length || 0).toBe(0);
   });
 
@@ -140,7 +140,7 @@ describe('generalFhirSearch Integration Tests', () => {
   });
 
   test('should return OperationOutcome if queryParams is missing or empty', async () => {
-    let args: GeneralFhirSearchArgs = {
+    const args: GeneralFhirSearchArgs = {
       resourceType: 'Patient',
       queryParams: {},
     };
@@ -150,8 +150,8 @@ describe('generalFhirSearch Integration Tests', () => {
     expect(outcome.issue?.[0]?.diagnostics).toContain('At least one query parameter is required');
 
     // Test for queryParams entirely missing
-    const argsMissingQueryParams = { resourceType: 'Patient' } as unknown as GeneralFhirSearchArgs; 
-    
+    const argsMissingQueryParams = { resourceType: 'Patient' } as unknown as GeneralFhirSearchArgs;
+
     result = await generalFhirSearch(argsMissingQueryParams);
     expect(result.resourceType).toBe('OperationOutcome');
     outcome = result as OperationOutcome;
@@ -172,10 +172,10 @@ describe('generalFhirSearch Integration Tests', () => {
     // Check that there is an issue reported, and it has details or diagnostics.
     expect(outcome.issue?.length).toBeGreaterThan(0);
     expect(outcome.issue?.[0]?.code).toBe('structure'); // As seen from logs
-    expect(outcome.issue?.[0]?.details?.text).toContain('Unknown resource type'); 
+    expect(outcome.issue?.[0]?.details?.text).toContain('Unknown resource type');
   });
 
-   test('should correctly build query string with multiple array parameters', async () => {
+  test('should correctly build query string with multiple array parameters', async () => {
     // This test is more of a unit test for query string construction logic within generalFhirSearch,
     // but it's useful to have here as an integration check too.
     // We won't actually call the function, but check the console log for the query string.
@@ -199,12 +199,12 @@ describe('generalFhirSearch Integration Tests', () => {
     let generatedQuery = '';
     // Find the log entry that contains the query string
     for (const call of consoleSpy.mock.calls) {
-        if (typeof call[0] === 'string' && call[0].includes('Performing general FHIR search')) {
-            generatedQuery = call[0].substring(call[0].indexOf('with query: ') + 'with query: '.length);
-            break;
-        }
+      if (typeof call[0] === 'string' && call[0].includes('Performing general FHIR search')) {
+        generatedQuery = call[0].substring(call[0].indexOf('with query: ') + 'with query: '.length);
+        break;
+      }
     }
-    
+
     // The order of parameters in the final query string can vary, so we check for parts.
     // Corrected expected parts:
     expect(generatedQuery).toContain('status=active');
@@ -212,7 +212,7 @@ describe('generalFhirSearch Integration Tests', () => {
     expect(generatedQuery).toContain('date=le2024-01-31');
     expect(generatedQuery).toContain('category=vital-signs');
     expect(generatedQuery).toContain('category=laboratory');
-    
+
     // Also check the number of '&' which should be number of params - 1
     // In this case: status=active & date=ge2024-01-01 & date=le2024-01-31 & category=vital-signs & category=laboratory
     // So, 5 parameters means 4 ampersands.
@@ -221,5 +221,4 @@ describe('generalFhirSearch Integration Tests', () => {
 
     consoleSpy.mockRestore();
   });
-
-}); 
+});

@@ -30,7 +30,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     // Create a Patient
     const patientToCreate: Patient = {
       resourceType: 'Patient',
-      name: [{ given: ['TestEoCFirstName'], family: `TestEoCLastName-${randomUUID().slice(0,4)}` }],
+      name: [{ given: ['TestEoCFirstName'], family: `TestEoCLastName-${randomUUID().slice(0, 4)}` }],
       gender: 'male',
       birthDate: '1970-01-01',
     };
@@ -40,7 +40,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     // Create an Organization
     const orgToCreate: Organization = {
       resourceType: 'Organization',
-      name: `Test EoC Org ${randomUUID().slice(0,4)}`,
+      name: `Test EoC Org ${randomUUID().slice(0, 4)}`,
       active: true,
     };
     testOrganization = await medplum.createResource(orgToCreate);
@@ -49,12 +49,12 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     // Create a Practitioner (Care Manager)
     const practToCreate: Practitioner = {
       resourceType: 'Practitioner',
-      name: [{ given: ['TestEoCCareMgrFirst'], family: `TestEoCCareMgrLast-${randomUUID().slice(0,4)}` }],
+      name: [{ given: ['TestEoCCareMgrFirst'], family: `TestEoCCareMgrLast-${randomUUID().slice(0, 4)}` }],
       active: true,
     };
     testPractitioner = await medplum.createResource(practToCreate);
     console.log('Test Practitioner created for EoC tests:', testPractitioner.id);
-    
+
     expect(testPatient.id).toBeDefined();
     expect(testOrganization.id).toBeDefined();
     expect(testPractitioner.id).toBeDefined();
@@ -96,7 +96,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     });
 
     test('should create a new EpisodeOfCare with all fields', async () => {
-      const identifierValue = `EOC-ID-${randomUUID().slice(0,8)}`;
+      const identifierValue = `EOC-ID-${randomUUID().slice(0, 8)}`;
       const args: CreateEpisodeOfCareArgs = {
         patientId: testPatient.id as string,
         status: 'planned',
@@ -230,15 +230,23 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     test('should update period, managingOrganization, and careManager', async () => {
       const newEndDate = '2023-12-31T23:59:59Z';
       // Create a new org and practitioner for this specific update test to avoid interference
-      const newOrg = await medplum.createResource<Organization>({ resourceType: 'Organization', name: 'New Update Org', active: true });
-      const newPract = await medplum.createResource<Practitioner>({ resourceType: 'Practitioner', name: [{ given: ['NewUpdateMgr']}], active: true });
+      const newOrg = await medplum.createResource<Organization>({
+        resourceType: 'Organization',
+        name: 'New Update Org',
+        active: true,
+      });
+      const newPract = await medplum.createResource<Practitioner>({
+        resourceType: 'Practitioner',
+        name: [{ given: ['NewUpdateMgr'] }],
+        active: true,
+      });
       expect(newOrg.id).toBeDefined();
       expect(newPract.id).toBeDefined();
 
       const updates: UpdateEpisodeOfCareArgs = {
         periodEnd: newEndDate,
-        managingOrganizationId: newOrg.id as string,
-        careManagerId: newPract.id as string,
+        managingOrganizationId: newOrg.id,
+        careManagerId: newPract.id,
       };
       const result = await updateEpisodeOfCare(eocToUpdate.id as string, updates);
       expect(result.resourceType).toBe('EpisodeOfCare');
@@ -246,15 +254,18 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(updatedEoc.period?.end).toBe(newEndDate);
       expect(updatedEoc.managingOrganization?.reference).toBe(`Organization/${newOrg.id}`);
       expect(updatedEoc.careManager?.reference).toBe(`Practitioner/${newPract.id}`);
-      
+
       // Cleanup new org and practitioner
-      if(newOrg.id) await medplum.deleteResource('Organization', newOrg.id);
-      if(newPract.id) await medplum.deleteResource('Practitioner', newPract.id);
+      if (newOrg.id) await medplum.deleteResource('Organization', newOrg.id);
+      if (newPract.id) await medplum.deleteResource('Practitioner', newPract.id);
     });
 
     test('should update (replace) the type array', async () => {
       const newType: CodeableConcept[] = [
-        { coding: [{ system: 'http://example.com/new-types', code: 'NT001', display: 'New Type 1' }], text: 'New Type 1' },
+        {
+          coding: [{ system: 'http://example.com/new-types', code: 'NT001', display: 'New Type 1' }],
+          text: 'New Type 1',
+        },
       ];
       const updates: UpdateEpisodeOfCareArgs = { type: newType };
       const result = await updateEpisodeOfCare(eocToUpdate.id as string, updates);
@@ -264,17 +275,17 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(updatedEoc.type?.length).toBe(1);
       expect(updatedEoc.type?.[0]?.coding?.[0]?.code).toBe('NT001');
     });
-    
+
     test('should allow unsetting managingOrganization and careManager by providing null', async () => {
-        const updates: UpdateEpisodeOfCareArgs = {
-            managingOrganizationId: null as any, // Testing the explicit null path
-            careManagerId: null as any, // Testing the explicit null path
-        };
-        const result = await updateEpisodeOfCare(eocToUpdate.id as string, updates);
-        expect(result.resourceType).toBe('EpisodeOfCare');
-        const updatedEoc = result as EpisodeOfCare;
-        expect(updatedEoc.managingOrganization).toBeUndefined();
-        expect(updatedEoc.careManager).toBeUndefined();
+      const updates: UpdateEpisodeOfCareArgs = {
+        managingOrganizationId: null as any, // Testing the explicit null path
+        careManagerId: null as any, // Testing the explicit null path
+      };
+      const result = await updateEpisodeOfCare(eocToUpdate.id as string, updates);
+      expect(result.resourceType).toBe('EpisodeOfCare');
+      const updatedEoc = result as EpisodeOfCare;
+      expect(updatedEoc.managingOrganization).toBeUndefined();
+      expect(updatedEoc.careManager).toBeUndefined();
     });
 
     test('should return OperationOutcome if no updates are provided', async () => {
@@ -298,15 +309,15 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
     let searchTestPractitionerId: string;
     let eocSearch1: EpisodeOfCare, eocSearch2: EpisodeOfCare, eocSearch3: EpisodeOfCare;
     const searchEocIdentifierSystem = 'urn:test:search-eoc-ids';
-    const searchEocIdentifierValue1 = `SREOC1-${randomUUID().slice(0,6)}`;
-    const searchEocIdentifierValue2 = `SREOC2-${randomUUID().slice(0,6)}`;
+    const searchEocIdentifierValue1 = `SREOC1-${randomUUID().slice(0, 6)}`;
+    const searchEocIdentifierValue2 = `SREOC2-${randomUUID().slice(0, 6)}`;
 
     beforeAll(async () => {
       // Assign IDs from global test resources created in the top-level beforeAll
       searchTestPatientId = testPatient.id as string;
       searchTestOrgId = testOrganization.id as string;
       searchTestPractitionerId = testPractitioner.id as string;
-      
+
       expect(searchTestPatientId).toBeDefined();
       expect(searchTestOrgId).toBeDefined();
       expect(searchTestPractitionerId).toBeDefined();
@@ -315,11 +326,16 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const eoc1Args: CreateEpisodeOfCareArgs = {
         patientId: searchTestPatientId,
         status: 'active',
-        type: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/episodeofcare-type', code: 'hacc' }], text: 'Home Care EoC'}],
+        type: [
+          {
+            coding: [{ system: 'http://terminology.hl7.org/CodeSystem/episodeofcare-type', code: 'hacc' }],
+            text: 'Home Care EoC',
+          },
+        ],
         periodStart: '2023-01-10T10:00:00Z',
         periodEnd: '2023-03-10T10:00:00Z',
-        managingOrganizationId: searchTestOrgId, 
-        identifier: [{ system: searchEocIdentifierSystem, value: searchEocIdentifierValue1 }]
+        managingOrganizationId: searchTestOrgId,
+        identifier: [{ system: searchEocIdentifierSystem, value: searchEocIdentifierValue1 }],
       };
       const eoc1Result = await createEpisodeOfCare(eoc1Args);
       expect(eoc1Result.resourceType).not.toBe('OperationOutcome');
@@ -331,12 +347,12 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(fetchedEoc1.managingOrganization?.reference).toBe(`Organization/${searchTestOrgId}`);
 
       const eoc2Args: CreateEpisodeOfCareArgs = {
-        patientId: searchTestPatientId, 
+        patientId: searchTestPatientId,
         status: 'finished',
         type: [{ coding: [{ system: 'http://snomed.info/sct', code: '394802001' }], text: 'Long term care' }],
         periodStart: '2022-05-01T00:00:00Z',
         careManagerId: searchTestPractitionerId,
-        identifier: [{ system: searchEocIdentifierSystem, value: searchEocIdentifierValue2 }]
+        identifier: [{ system: searchEocIdentifierSystem, value: searchEocIdentifierValue2 }],
       };
       const eoc2Result = await createEpisodeOfCare(eoc2Args);
       expect(eoc2Result.resourceType).not.toBe('OperationOutcome');
@@ -346,13 +362,21 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const fetchedEoc2 = await medplum.readResource('EpisodeOfCare', eocSearch2.id!);
       console.log('Fetched eocSearch2 for verification:', JSON.stringify(fetchedEoc2, null, 2));
       expect(fetchedEoc2.careManager?.reference).toBe(`Practitioner/${searchTestPractitionerId}`);
-      
+
       // Create another patient for a specific search test
-      const otherPatient = await medplum.createResource<Patient>({ resourceType: 'Patient', name: [{given: ['OtherSearch'], family: 'Patient'}]});
+      const otherPatient = await medplum.createResource<Patient>({
+        resourceType: 'Patient',
+        name: [{ given: ['OtherSearch'], family: 'Patient' }],
+      });
       const eoc3Args: CreateEpisodeOfCareArgs = {
-        patientId: otherPatient.id as string,
+        patientId: otherPatient.id,
         status: 'active',
-        type: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/episodeofcare-type', code: 'pac' }], text: 'Post Acute Care' }],
+        type: [
+          {
+            coding: [{ system: 'http://terminology.hl7.org/CodeSystem/episodeofcare-type', code: 'pac' }],
+            text: 'Post Acute Care',
+          },
+        ],
         periodStart: '2023-02-15T00:00:00Z',
       };
       eocSearch3 = (await createEpisodeOfCare(eoc3Args)) as EpisodeOfCare;
@@ -370,9 +394,9 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
         // Let's adjust: create this other patient and add its ID to a list for cleanup in the main afterAll, or handle its cleanup more carefully.
         // For this example, since it's just used to create eocSearch3, and eocSearch3's reference will be by ID,
         // we can delete `otherPatient` after `eocSearch3` is created. The reference in `eocSearch3` will still hold the ID.
-         await medplum.deleteResource('Patient', otherPatient.id as string);
+        await medplum.deleteResource('Patient', otherPatient.id);
       }
-      
+
       expect(eocSearch1.id).toBeDefined();
       expect(eocSearch2.id).toBeDefined();
       expect(eocSearch3.id).toBeDefined();
@@ -384,8 +408,8 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
       expect(eocs.length).toBeGreaterThanOrEqual(2);
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
-      expect(eocs.some(e => e.id === eocSearch2.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch2.id)).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by status (single)', async () => {
@@ -393,9 +417,9 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
-      expect(eocs.some(e => e.id === eocSearch3.id)).toBeTruthy();
-      expect(eocs.every(e => e.status === 'active')).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch3.id)).toBeTruthy();
+      expect(eocs.every((e) => e.status === 'active')).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by status (comma-separated)', async () => {
@@ -403,9 +427,9 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy(); // active
-      expect(eocs.some(e => e.id === eocSearch2.id)).toBeTruthy(); // finished
-      expect(eocs.some(e => e.id === eocSearch3.id)).toBeTruthy(); // active
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy(); // active
+      expect(eocs.some((e) => e.id === eocSearch2.id)).toBeTruthy(); // finished
+      expect(eocs.some((e) => e.id === eocSearch3.id)).toBeTruthy(); // active
     });
 
     test('should find EpisodesOfCare by type (code only)', async () => {
@@ -413,7 +437,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by type (system|code)', async () => {
@@ -421,15 +445,15 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch2.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch2.id)).toBeTruthy();
     });
-    
+
     test('should find EpisodesOfCare by date (exact start date of one item)', async () => {
       const args: EpisodeOfCareSearchArgs = { date: '2023-01-10T10:00:00Z' }; // eocSearch1
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by date range (covers eocSearch1)', async () => {
@@ -437,7 +461,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
     });
 
     test('should find EpisodeOfCare by identifier (value only)', async () => {
@@ -446,7 +470,7 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
       expect(eocs.length).toBeGreaterThanOrEqual(1);
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
     });
 
     test('should find EpisodeOfCare by identifier (system|value)', async () => {
@@ -455,31 +479,35 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
       expect(eocs.length).toBeGreaterThanOrEqual(1);
-      expect(eocs.some(e => e.id === eocSearch2.id)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch2.id)).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by managing-organization', async () => {
       const targetEoc = await medplum.readResource('EpisodeOfCare', eocSearch1.id!);
-      console.log(`Verifying eocSearch1 (${eocSearch1.id}) for org search. ManagingOrg: ${targetEoc.managingOrganization?.reference}`);
-      
+      console.log(
+        `Verifying eocSearch1 (${eocSearch1.id}) for org search. ManagingOrg: ${targetEoc.managingOrganization?.reference}`,
+      );
+
       const args: EpisodeOfCareSearchArgs = { organization: `Organization/${searchTestOrgId}` };
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
-      expect(eocs.every(e => e.managingOrganization?.reference === `Organization/${searchTestOrgId}`)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
+      expect(eocs.every((e) => e.managingOrganization?.reference === `Organization/${searchTestOrgId}`)).toBeTruthy();
     });
 
     test('should find EpisodesOfCare by care-manager', async () => {
       const targetEoc = await medplum.readResource('EpisodeOfCare', eocSearch2.id!);
-      console.log(`Verifying eocSearch2 (${eocSearch2.id}) for care-manager search. CareManager: ${targetEoc.careManager?.reference}`);
+      console.log(
+        `Verifying eocSearch2 (${eocSearch2.id}) for care-manager search. CareManager: ${targetEoc.careManager?.reference}`,
+      );
 
       const args: EpisodeOfCareSearchArgs = { 'care-manager': `Practitioner/${searchTestPractitionerId}` };
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch2.id)).toBeTruthy();
-      expect(eocs.every(e => e.careManager?.reference === `Practitioner/${searchTestPractitionerId}`)).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch2.id)).toBeTruthy();
+      expect(eocs.every((e) => e.careManager?.reference === `Practitioner/${searchTestPractitionerId}`)).toBeTruthy();
     });
 
     test('should find EpisodeOfCare with combined criteria (patient and status)', async () => {
@@ -487,8 +515,10 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       const result = await searchEpisodesOfCare(args);
       expect(result).not.toHaveProperty('resourceType', 'OperationOutcome');
       const eocs = result as EpisodeOfCare[];
-      expect(eocs.some(e => e.id === eocSearch1.id)).toBeTruthy();
-      expect(eocs.every(e => e.patient?.reference === `Patient/${searchTestPatientId}` && e.status === 'active')).toBeTruthy();
+      expect(eocs.some((e) => e.id === eocSearch1.id)).toBeTruthy();
+      expect(
+        eocs.every((e) => e.patient?.reference === `Patient/${searchTestPatientId}` && e.status === 'active'),
+      ).toBeTruthy();
     });
 
     test('should return an empty array for criteria that match no EpisodesOfCare', async () => {
@@ -506,4 +536,4 @@ describe('EpisodeOfCare Utils Integration Tests', () => {
       expect(outcome.issue?.[0]?.diagnostics).toContain('At least one search criterion must be provided');
     });
   });
-}); 
+});

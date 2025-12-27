@@ -7,19 +7,19 @@ import {
   searchPractitioners,
   CreatePractitionerArgs,
   UpdatePractitionerArgs,
-  PractitionerSearchCriteria
+  PractitionerSearchCriteria,
 } from '../../src/tools/practitionerUtils';
 import { Practitioner } from '@medplum/fhirtypes';
 
 // Timeout for async operations, e.g., API calls to Medplum
 // Jest default is 5000ms. Increase if tests are timing out due to network latency.
-// jest.setTimeout(10000); 
+// jest.setTimeout(10000);
 
 describe('Practitioner Tools Integration Tests', () => {
   let createdPractitionerId: string | undefined;
   const testPractitionerBase = {
     givenName: 'IntegrationTest',
-    familyName: 'Practitioner'
+    familyName: 'Practitioner',
   };
   const uniqueTimestamp = Date.now();
 
@@ -86,16 +86,18 @@ describe('Practitioner Tools Integration Tests', () => {
       const updatedPractitioner = await updatePractitioner(createdPractitionerId!, updates);
       expect(updatedPractitioner).toBeDefined();
       expect(updatedPractitioner.active).toBe(true);
-      expect(updatedPractitioner.telecom?.some(t => t.value === `test${uniqueTimestamp}@example.com`)).toBe(true);
+      expect(updatedPractitioner.telecom?.some((t) => t.value === `test${uniqueTimestamp}@example.com`)).toBe(true);
     });
   });
 
   describe('searchPractitionersByName (existing specific search)', () => {
     it('should find a practitioner by family name using searchPractitionersByName', async () => {
-      const practitioners = await searchPractitionersByName({ familyName: `${testPractitionerBase.familyName}${uniqueTimestamp}` });
+      const practitioners = await searchPractitionersByName({
+        familyName: `${testPractitionerBase.familyName}${uniqueTimestamp}`,
+      });
       expect(practitioners).toBeDefined();
       expect(practitioners.length).toBeGreaterThanOrEqual(1);
-      expect(practitioners.some(p => p.id === createdPractitionerId)).toBe(true);
+      expect(practitioners.some((p) => p.id === createdPractitionerId)).toBe(true);
     });
 
     it('should find no practitioners for a non-existent name using searchPractitionersByName', async () => {
@@ -111,17 +113,17 @@ describe('Practitioner Tools Integration Tests', () => {
       const practitioners = await searchPractitioners(criteria);
       expect(practitioners).toBeDefined();
       expect(practitioners.length).toBeGreaterThanOrEqual(1);
-      expect(practitioners.some(p => p.id === createdPractitionerId)).toBe(true);
+      expect(practitioners.some((p) => p.id === createdPractitionerId)).toBe(true);
     });
 
     it('should find a practitioner by partial name using general search', async () => {
-      const criteria: PractitionerSearchCriteria = { name: testPractitionerBase.givenName }; 
+      const criteria: PractitionerSearchCriteria = { name: testPractitionerBase.givenName };
       const practitioners = await searchPractitioners(criteria);
       expect(practitioners).toBeDefined();
       expect(practitioners.length).toBeGreaterThanOrEqual(1);
-      expect(practitioners.some(p => p.id === createdPractitionerId)).toBe(true);
+      expect(practitioners.some((p) => p.id === createdPractitionerId)).toBe(true);
     });
-    
+
     it('should return an empty array if no criteria match for general search', async () => {
       const criteria: PractitionerSearchCriteria = { name: 'AbsolutelyNonExistentName999' };
       const practitioners = await searchPractitioners(criteria);
@@ -149,4 +151,4 @@ describe('Practitioner Tools Integration Tests', () => {
     expect(practitioners[0].name?.[0]?.family).toEqual('Example'); // Or a more specific check
   });
   */
-}); 
+});

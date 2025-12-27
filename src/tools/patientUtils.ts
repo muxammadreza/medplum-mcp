@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
 import { Patient, HumanName, Identifier, ContactPoint, Address, Coding } from '@medplum/fhirtypes';
 
@@ -35,7 +39,7 @@ export interface PatientSearchArgs {
   email?: string;
   telecom?: string;
   familyName?: string; // Added for more specific name search
-  givenName?: string;  // Added for more specific name search
+  givenName?: string; // Added for more specific name search
   identifier?: string; // General identifier search (e.g. system|value or just value)
   _lastUpdated?: string;
   // Add fields that tests expect
@@ -119,10 +123,10 @@ export async function createPatient(args: CreatePatientArgs): Promise<Patient> {
  */
 export async function getPatientById(args: { patientId: string } | string): Promise<Patient | null> {
   await ensureAuthenticated();
-  
+
   // Handle both string and object parameter formats
   const patientId = typeof args === 'string' ? args : args.patientId;
-  
+
   if (!patientId) {
     throw new Error('Patient ID is required to fetch a patient.');
   }
@@ -131,7 +135,7 @@ export async function getPatientById(args: { patientId: string } | string): Prom
     return await medplum.readResource('Patient', patientId);
   } catch (error: any) {
     if (error.outcome?.issue?.[0]?.code === 'not-found') {
-        return null;
+      return null;
     }
     throw error;
   }
@@ -143,7 +147,10 @@ export async function getPatientById(args: { patientId: string } | string): Prom
  * @param updates - An object containing the fields to update.
  * @returns A promise that resolves to the updated Patient resource, or null if an error occurs.
  */
-export async function updatePatient(patientId: string, updates: Omit<Partial<Patient>, 'resourceType' | 'id'>): Promise<Patient> {
+export async function updatePatient(
+  patientId: string,
+  updates: Omit<Partial<Patient>, 'resourceType' | 'id'>,
+): Promise<Patient> {
   await ensureAuthenticated();
 
   if (!patientId) {
@@ -157,7 +164,7 @@ export async function updatePatient(patientId: string, updates: Omit<Partial<Pat
   if (!existingPatient) {
     throw new Error(`Patient with ID ${patientId} not found.`);
   }
-  
+
   const { resourceType, id, ...safeUpdates } = updates as any;
 
   const patientToUpdate: Patient = {
@@ -205,4 +212,4 @@ export async function searchPatients(args: PatientSearchArgs): Promise<Patient[]
   return medplum.searchResources('Patient', queryString);
 }
 
-// Example Usage has been migrated to tests/integration/patient.integration.test.ts 
+// Example Usage has been migrated to tests/integration/patient.integration.test.ts

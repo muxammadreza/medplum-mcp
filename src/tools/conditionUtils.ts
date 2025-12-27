@@ -143,8 +143,7 @@ export async function createCondition(
       subject: args.subject,
       code: args.code,
       clinicalStatus: args.clinicalStatus || { coding: [ConditionClinicalStatusCodes.ACTIVE] },
-      verificationStatus:
-        args.verificationStatus || { coding: [ConditionVerificationStatusCodes.CONFIRMED] },
+      verificationStatus: args.verificationStatus || { coding: [ConditionVerificationStatusCodes.CONFIRMED] },
       category: args.category,
       encounter: args.encounter,
       onsetDateTime: args.onsetDateTime,
@@ -157,13 +156,10 @@ export async function createCondition(
 
     // Remove undefined fields to create a clean resource object
     Object.keys(conditionResource).forEach(
-      (key) =>
-        (conditionResource as any)[key] === undefined && delete (conditionResource as any)[key],
+      (key) => (conditionResource as any)[key] === undefined && delete (conditionResource as any)[key],
     );
 
-    const createdCondition = (await medplumClient.createResource(
-      conditionResource,
-    )) as Condition;
+    const createdCondition = (await medplumClient.createResource(conditionResource)) as Condition;
     console.log('Condition created successfully:', createdCondition.id);
     return createdCondition;
   } catch (error: any) {
@@ -201,10 +197,7 @@ export async function getConditionById(
     if (!conditionId) {
       throw new Error('Condition ID is required.');
     }
-    const condition = (await medplumClient.readResource(
-      'Condition',
-      conditionId,
-    )) as Condition | null;
+    const condition = (await medplumClient.readResource('Condition', conditionId)) as Condition | null;
     if (condition) {
       console.log('Condition retrieved:', condition.id);
     }
@@ -253,10 +246,7 @@ export async function updateCondition(
       throw new Error('No updates provided for Condition.');
     }
 
-    const existingCondition = (await medplumClient.readResource(
-      'Condition',
-      id,
-    )) as Condition;
+    const existingCondition = (await medplumClient.readResource('Condition', id)) as Condition;
 
     const updatedResource: Condition = { ...existingCondition, ...(updates as any) };
     // Handle null values for removal
@@ -315,7 +305,7 @@ export async function searchConditions(
     if (args.code) {
       searchCriteria.push(`code=${args.code}`);
     }
-    if(args['asserter.identifier']){
+    if (args['asserter.identifier']) {
       searchCriteria.push(`asserter.identifier=${args['asserter.identifier']}`);
     }
 
@@ -359,4 +349,4 @@ export async function searchConditions(
     }
     return outcome;
   }
-} 
+}

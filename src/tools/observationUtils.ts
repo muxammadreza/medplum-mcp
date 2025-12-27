@@ -1,5 +1,20 @@
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
-import { Observation, Patient, Practitioner, Encounter, Reference, Identifier, CodeableConcept, Period, Quantity, Ratio, SampledData, Attachment, Range, ObservationReferenceRange } from '@medplum/fhirtypes';
+import {
+  Observation,
+  Patient,
+  Practitioner,
+  Encounter,
+  Reference,
+  Identifier,
+  CodeableConcept,
+  Period,
+  Quantity,
+  Ratio,
+  SampledData,
+  Attachment,
+  Range,
+  ObservationReferenceRange,
+} from '@medplum/fhirtypes';
 
 // Interface for creating an Observation
 export interface CreateObservationArgs {
@@ -82,7 +97,6 @@ export interface ObservationSearchArgs {
   _lastUpdated?: string; // Search by last updated date
 }
 
-
 /**
  * Creates a new Observation resource.
  * @param args - The arguments for creating the observation.
@@ -106,7 +120,7 @@ export async function createObservation(args: CreateObservationArgs): Promise<Ob
   // Handle performerIds conversion for convenience
   let performer = args.performer;
   if (args.performerIds && !performer) {
-    performer = args.performerIds.map(id => ({ reference: `Practitioner/${id}` }));
+    performer = args.performerIds.map((id) => ({ reference: `Practitioner/${id}` }));
   }
 
   if (!subject?.reference) {
@@ -119,11 +133,21 @@ export async function createObservation(args: CreateObservationArgs): Promise<Ob
     throw new Error('Observation status is required.');
   }
   if (
-    args.valueQuantity === undefined && args.valueCodeableConcept === undefined && args.valueString === undefined && args.valueBoolean === undefined &&
-    args.valueInteger === undefined && args.valueRange === undefined && args.valueRatio === undefined && args.valueSampledData === undefined &&
-    args.valueTime === undefined && args.valueDateTime === undefined && args.valuePeriod === undefined
+    args.valueQuantity === undefined &&
+    args.valueCodeableConcept === undefined &&
+    args.valueString === undefined &&
+    args.valueBoolean === undefined &&
+    args.valueInteger === undefined &&
+    args.valueRange === undefined &&
+    args.valueRatio === undefined &&
+    args.valueSampledData === undefined &&
+    args.valueTime === undefined &&
+    args.valueDateTime === undefined &&
+    args.valuePeriod === undefined
   ) {
-    throw new Error('At least one value field must be provided (valueQuantity, valueCodeableConcept, valueString, valueBoolean, valueInteger, valueRange, valueRatio, valueSampledData, valueTime, valueDateTime, or valuePeriod).');
+    throw new Error(
+      'At least one value field must be provided (valueQuantity, valueCodeableConcept, valueString, valueBoolean, valueInteger, valueRange, valueRatio, valueSampledData, valueTime, valueDateTime, or valuePeriod).',
+    );
   }
 
   const observationResource: Observation = {
@@ -231,7 +255,8 @@ export async function updateObservation(observationId: string, updates: UpdateOb
     workingUpdates.note = [{ text: noteInput }];
   } else if (noteInput === null) {
     workingUpdates.note = undefined;
-  } else if (noteInput !== undefined) { // If it was already Annotation[]
+  } else if (noteInput !== undefined) {
+    // If it was already Annotation[]
     workingUpdates.note = noteInput as any; // Cast if UpdateObservationArgs not updated
   }
 
@@ -245,10 +270,10 @@ export async function updateObservation(observationId: string, updates: UpdateOb
   // Handle subjectId to subject reference
   if (typeof subjectIdInput === 'string') {
     workingUpdates.subject = { reference: `Patient/${subjectIdInput}` };
-  } else if (subjectIdInput === null) { // Allow clearing subject if necessary
+  } else if (subjectIdInput === null) {
+    // Allow clearing subject if necessary
     workingUpdates.subject = undefined;
   }
-
 
   // Handle encounterId to encounter reference
   if (typeof encounterIdInput === 'string') {
@@ -259,16 +284,24 @@ export async function updateObservation(observationId: string, updates: UpdateOb
 
   // Handle performerIds to performer references
   if (Array.isArray(performerIdsInput)) {
-    workingUpdates.performer = performerIdsInput.map(id => ({ reference: `Practitioner/${id}` }));
+    workingUpdates.performer = performerIdsInput.map((id) => ({ reference: `Practitioner/${id}` }));
   } else if (performerIdsInput === null) {
     workingUpdates.performer = undefined; // Clear performers
   }
 
   // value[x] exclusivity logic
   const valueFields: (keyof Observation)[] = [
-    'valueQuantity', 'valueCodeableConcept', 'valueString', 'valueBoolean',
-    'valueInteger', 'valueRange', 'valueRatio', 'valueSampledData',
-    'valueTime', 'valueDateTime', 'valuePeriod'
+    'valueQuantity',
+    'valueCodeableConcept',
+    'valueString',
+    'valueBoolean',
+    'valueInteger',
+    'valueRange',
+    'valueRatio',
+    'valueSampledData',
+    'valueTime',
+    'valueDateTime',
+    'valuePeriod',
   ];
 
   let valueKeyPresentInUpdates: keyof Observation | undefined;
@@ -299,7 +332,7 @@ export async function updateObservation(observationId: string, updates: UpdateOb
     ...existingObservation,
     ...workingUpdates,
     resourceType: 'Observation', // Ensure resourceType is correctly maintained
-    id: observationId,           // Ensure ID is correctly maintained
+    id: observationId, // Ensure ID is correctly maintained
   };
 
   return medplum.updateResource(updatedResource);
@@ -307,18 +340,25 @@ export async function updateObservation(observationId: string, updates: UpdateOb
 
 // Helper function to clear other value[x] fields when one is set
 function clearOtherValues(resource: Observation, valueKeyToKeep: keyof Observation) {
-    const valueKeysToClear: (keyof Observation)[] = [
-        'valueQuantity', 'valueCodeableConcept', 'valueString', 'valueBoolean',
-        'valueInteger', 'valueRange', 'valueRatio', 'valueSampledData',
-        'valueTime', 'valueDateTime', 'valuePeriod'
-    ];
-    valueKeysToClear.forEach(key => {
-        if (key !== valueKeyToKeep) {
-            delete resource[key];
-        }
-    });
+  const valueKeysToClear: (keyof Observation)[] = [
+    'valueQuantity',
+    'valueCodeableConcept',
+    'valueString',
+    'valueBoolean',
+    'valueInteger',
+    'valueRange',
+    'valueRatio',
+    'valueSampledData',
+    'valueTime',
+    'valueDateTime',
+    'valuePeriod',
+  ];
+  valueKeysToClear.forEach((key) => {
+    if (key !== valueKeyToKeep) {
+      delete resource[key];
+    }
+  });
 }
-
 
 /**
  * Searches for Observation resources based on specified criteria.
@@ -330,13 +370,15 @@ export async function searchObservations(args: ObservationSearchArgs): Promise<O
   const searchCriteria: string[] = [];
 
   if (Object.keys(args).length === 0) {
-    console.warn('Observation search called with no specific criteria. This might return a large number of results or be inefficient.');
+    console.warn(
+      'Observation search called with no specific criteria. This might return a large number of results or be inefficient.',
+    );
   }
 
   if (args.patientId) {
     searchCriteria.push(`subject=Patient/${args.patientId}`);
-  } else if (args.subject) { 
-     searchCriteria.push(`subject=${args.subject}`);
+  } else if (args.subject) {
+    searchCriteria.push(`subject=${args.subject}`);
   }
 
   if (args.code) {
@@ -352,12 +394,12 @@ export async function searchObservations(args: ObservationSearchArgs): Promise<O
   if (args.date) {
     // If no comparator is provided, default to 'eq' for exact date match
     const dateValue = args.date.match(/^(eq|ne|gt|lt|ge|le)/) ? args.date : `eq${args.date}`;
-    searchCriteria.push(`date=${dateValue}`); 
+    searchCriteria.push(`date=${dateValue}`);
   }
   if (args.status) {
     searchCriteria.push(`status=${args.status}`);
   }
-   if (args.performer) {
+  if (args.performer) {
     searchCriteria.push(`performer=${args.performer}`);
   }
   if (args.identifier) {
@@ -371,12 +413,12 @@ export async function searchObservations(args: ObservationSearchArgs): Promise<O
     console.warn('Observation search arguments provided but did not map to any known search parameters:', args);
     return [];
   }
-  
+
   if (searchCriteria.length > 0 || Object.keys(args).length === 0) {
-      const queryString = searchCriteria.join('&');
-      // console.log(`Searching observations with query: ${queryString}`); // Optional: for debugging
-      return medplum.searchResources('Observation', queryString);
+    const queryString = searchCriteria.join('&');
+    // console.log(`Searching observations with query: ${queryString}`); // Optional: for debugging
+    return medplum.searchResources('Observation', queryString);
   } else {
-      return [];
+    return [];
   }
-} 
+}

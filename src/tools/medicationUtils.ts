@@ -52,13 +52,10 @@ export async function createMedication(
     };
 
     Object.keys(medicationResource).forEach(
-      (key) =>
-        (medicationResource as any)[key] === undefined && delete (medicationResource as any)[key],
+      (key) => (medicationResource as any)[key] === undefined && delete (medicationResource as any)[key],
     );
 
-    const createdMedication = (await medplumClient.createResource(
-      medicationResource,
-    )) as Medication;
+    const createdMedication = (await medplumClient.createResource(medicationResource)) as Medication;
     console.log('Medication created successfully:', createdMedication);
     return createdMedication;
   } catch (error: any) {
@@ -96,10 +93,7 @@ export async function getMedicationById(
     if (!medicationId) {
       throw new Error('Medication ID is required.');
     }
-    const medication = (await medplumClient.readResource(
-      'Medication',
-      medicationId,
-    )) as Medication | null;
+    const medication = (await medplumClient.readResource('Medication', medicationId)) as Medication | null;
     console.log('Medication retrieved:', medication);
     return medication;
   } catch (error: any) {
@@ -264,4 +258,4 @@ async function main() {
 }
 
 main().catch(console.error);
-*/ 
+*/

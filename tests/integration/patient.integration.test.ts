@@ -84,13 +84,13 @@ describe('Patient Tools Integration Tests', () => {
   describe('updatePatient', () => {
     it('should update an existing patient', async () => {
       if (!createdPatientId) throw new Error('Test dependency failed: createdPatientId is not set.');
-      
+
       const updates: Omit<Partial<Patient>, 'resourceType' | 'id'> = {
         birthDate: '1980-01-17',
         name: [{ given: ['JohnIntegration', 'UpdatedMiddle'], family: 'DoeTest' }],
         gender: 'other',
       };
-      
+
       const updatedPatient = await updatePatient(createdPatientId, updates);
       expect(updatedPatient).toBeDefined();
       expect(updatedPatient).not.toBeNull();
@@ -106,21 +106,21 @@ describe('Patient Tools Integration Tests', () => {
       const patients = await searchPatients({ family: 'DoeTest' });
       expect(patients).toBeDefined();
       expect(patients.length).toBeGreaterThanOrEqual(1);
-      expect(patients.some(p => p.id === createdPatientId)).toBe(true);
+      expect(patients.some((p) => p.id === createdPatientId)).toBe(true);
     });
 
     it('should find patients by given and family name', async () => {
       const patients = await searchPatients({ given: 'JaneIntegration', family: 'SmithTest' });
       expect(patients).toBeDefined();
       expect(patients.length).toBeGreaterThanOrEqual(1);
-      expect(patients.some(p => p.id === createdPatientId2)).toBe(true);
+      expect(patients.some((p) => p.id === createdPatientId2)).toBe(true);
     });
 
     it('should find patients by birthdate', async () => {
       const patients = await searchPatients({ birthdate: '1992-07-20' });
       expect(patients).toBeDefined();
       expect(patients.length).toBeGreaterThanOrEqual(1);
-      const jane = patients.find(p => p.id === createdPatientId2);
+      const jane = patients.find((p) => p.id === createdPatientId2);
       expect(jane).toBeDefined();
       expect(jane?.name?.[0]?.given?.[0]).toEqual('JaneIntegration');
     });
@@ -152,4 +152,4 @@ describe('Patient Tools Integration Tests', () => {
       }
     }
   });
-}); 
+});

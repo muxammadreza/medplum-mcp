@@ -6,7 +6,7 @@ import {
   updateMedicationRequest,
   UpdateMedicationRequestArgs,
   searchMedicationRequests,
-  SearchMedicationRequestsArgs
+  SearchMedicationRequestsArgs,
 } from '../../src/tools/medicationRequestUtils';
 import { createPatient, CreatePatientArgs } from '../../src/tools/patientUtils';
 import { createPractitioner, CreatePractitionerArgs } from '../../src/tools/practitionerUtils';
@@ -39,18 +39,20 @@ describe('MedicationRequest Tool Integration Tests', () => {
       familyName: `Doctor-${randomUUID().substring(0, 8)}`,
     };
     testPractitioner = await createPractitioner(practitionerArgs);
-    if (!testPractitioner || !testPractitioner.id) throw new Error('Test practitioner creation failed for MedicationRequest tests');
+    if (!testPractitioner || !testPractitioner.id)
+      throw new Error('Test practitioner creation failed for MedicationRequest tests');
     console.log(`Created test practitioner for MedicationRequest tests: ${testPractitioner.id}`);
 
     const encounterArgs: CreateEncounterArgs = {
-        status: 'finished',
-        classCode: 'AMB',
-        patientId: testPatient.id,
-        practitionerIds: [testPractitioner.id],
-        identifierValue: `MEDREQ-ENC-${randomUUID().substring(0,8)}`
+      status: 'finished',
+      classCode: 'AMB',
+      patientId: testPatient.id,
+      practitionerIds: [testPractitioner.id],
+      identifierValue: `MEDREQ-ENC-${randomUUID().substring(0, 8)}`,
     };
     testEncounter = await createEncounter(encounterArgs);
-    if (!testEncounter || !testEncounter.id) throw new Error('Test encounter creation failed for MedicationRequest tests');
+    if (!testEncounter || !testEncounter.id)
+      throw new Error('Test encounter creation failed for MedicationRequest tests');
     console.log(`Created test encounter for MedicationRequest tests: ${testEncounter.id}`);
   });
 
@@ -64,21 +66,25 @@ describe('MedicationRequest Tool Integration Tests', () => {
         status: 'active',
         intent: 'order',
         medicationCodeableConcept: {
-          coding: [{
-            system: rxnormSystem,
-            code: '834060', // Lisinopril 10 MG Oral Tablet
-            display: 'Lisinopril 10 MG Oral Tablet'
-          }],
-          text: 'Lisinopril 10 MG Oral Tablet'
+          coding: [
+            {
+              system: rxnormSystem,
+              code: '834060', // Lisinopril 10 MG Oral Tablet
+              display: 'Lisinopril 10 MG Oral Tablet',
+            },
+          ],
+          text: 'Lisinopril 10 MG Oral Tablet',
         },
         subjectId: testPatient.id,
         encounterId: testEncounter.id,
         authoredOn: new Date().toISOString(),
         requesterId: testPractitioner.id,
-        dosageInstruction: [{
-          text: 'Take one tablet by mouth daily'
-        }],
-        identifier: { value: `medreq-create-${randomUUID().substring(0,8)}`, system: 'urn:custom:medreq'}
+        dosageInstruction: [
+          {
+            text: 'Take one tablet by mouth daily',
+          },
+        ],
+        identifier: { value: `medreq-create-${randomUUID().substring(0, 8)}`, system: 'urn:custom:medreq' },
       };
 
       const newMedReq = await createMedicationRequest(medReqArgs);
@@ -100,7 +106,7 @@ describe('MedicationRequest Tool Integration Tests', () => {
       const medReqArgs = {
         intent: 'order',
         medicationCodeableConcept: { text: 'Aspirin' },
-        subjectId: testPatient!.id!
+        subjectId: testPatient!.id!,
       } as unknown as CreateMedicationRequestArgs;
       await expect(createMedicationRequest(medReqArgs)).rejects.toThrow('MedicationRequest status is required.');
     });
@@ -109,7 +115,7 @@ describe('MedicationRequest Tool Integration Tests', () => {
       const medReqArgs = {
         status: 'active',
         medicationCodeableConcept: { text: 'Aspirin' },
-        subjectId: testPatient!.id!
+        subjectId: testPatient!.id!,
       } as unknown as CreateMedicationRequestArgs;
       await expect(createMedicationRequest(medReqArgs)).rejects.toThrow('MedicationRequest intent is required.');
     });
@@ -118,18 +124,22 @@ describe('MedicationRequest Tool Integration Tests', () => {
       const medReqArgs = {
         status: 'active',
         intent: 'order',
-        subjectId: testPatient!.id!
+        subjectId: testPatient!.id!,
       } as unknown as CreateMedicationRequestArgs;
-      await expect(createMedicationRequest(medReqArgs)).rejects.toThrow('Medication (medicationCodeableConcept or medicationReference) is required.');
+      await expect(createMedicationRequest(medReqArgs)).rejects.toThrow(
+        'Medication (medicationCodeableConcept or medicationReference) is required.',
+      );
     });
 
     it('should throw an error if subjectId is missing', async () => {
       const medReqArgs = {
         status: 'active',
         intent: 'order',
-        medicationCodeableConcept: { text: 'Aspirin' }
+        medicationCodeableConcept: { text: 'Aspirin' },
       } as unknown as CreateMedicationRequestArgs;
-      await expect(createMedicationRequest(medReqArgs)).rejects.toThrow('Subject (Patient ID) is required to create a MedicationRequest.');
+      await expect(createMedicationRequest(medReqArgs)).rejects.toThrow(
+        'Subject (Patient ID) is required to create a MedicationRequest.',
+      );
     });
   });
 
@@ -143,7 +153,7 @@ describe('MedicationRequest Tool Integration Tests', () => {
         intent: 'proposal',
         medicationCodeableConcept: { text: 'Amoxicillin 250mg tablet' },
         subjectId: testPatient.id,
-        identifier: { value: `medreq-get-${randomUUID().substring(0,8)}`}
+        identifier: { value: `medreq-get-${randomUUID().substring(0, 8)}` },
       };
       createdMedReq = await createMedicationRequest(medReqArgs);
       if (!createdMedReq || !createdMedReq.id) throw new Error('Test MedicationRequest creation failed for get tests');
@@ -168,7 +178,9 @@ describe('MedicationRequest Tool Integration Tests', () => {
     it('should throw an error if medication request ID is not provided', async () => {
       // @ts-ignore: Testing invalid input
       await expect(getMedicationRequestById({})).rejects.toThrow('MedicationRequest ID is required');
-      await expect(getMedicationRequestById({ medicationRequestId: '' })).rejects.toThrow('MedicationRequest ID is required');
+      await expect(getMedicationRequestById({ medicationRequestId: '' })).rejects.toThrow(
+        'MedicationRequest ID is required',
+      );
     });
   });
 
@@ -182,32 +194,35 @@ describe('MedicationRequest Tool Integration Tests', () => {
       const medReqArgs: CreateMedicationRequestArgs = {
         status: initialStatus,
         intent: 'plan',
-        medicationCodeableConcept: { 
+        medicationCodeableConcept: {
           coding: [{ system: rxnormSystem, code: '313782', display: 'Acetaminophen 325 MG Oral Tablet' }],
-          text: 'Acetaminophen 325 MG Oral Tablet' 
+          text: 'Acetaminophen 325 MG Oral Tablet',
         },
         subjectId: testPatient.id,
-        identifier: { value: `medreq-update-${randomUUID().substring(0,8)}`}
+        identifier: { value: `medreq-update-${randomUUID().substring(0, 8)}` },
       };
       medReqToUpdate = await createMedicationRequest(medReqArgs);
-      if (!medReqToUpdate || !medReqToUpdate.id) throw new Error('Test MedicationRequest creation failed for update tests');
+      if (!medReqToUpdate || !medReqToUpdate.id)
+        throw new Error('Test MedicationRequest creation failed for update tests');
       console.log(`Created MedicationRequest for update test: ${medReqToUpdate.id}, status: ${medReqToUpdate.status}`);
     });
 
     it('should update an existing medication request successfully', async () => {
       expect(medReqToUpdate?.id).toBeDefined();
-      const newDosageInstruction: Dosage[] = [{
-        sequence: 1,
-        text: 'Take 1 tablet every 4-6 hours as needed for pain',
-        timing: { repeat: { frequency: 1, period: 6, periodUnit: 'h' } },
-        route: { coding: [{ system: 'http://snomed.info/sct', code: '26643006', display: 'Oral route' }] }
-      }];
+      const newDosageInstruction: Dosage[] = [
+        {
+          sequence: 1,
+          text: 'Take 1 tablet every 4-6 hours as needed for pain',
+          timing: { repeat: { frequency: 1, period: 6, periodUnit: 'h' } },
+          route: { coding: [{ system: 'http://snomed.info/sct', code: '26643006', display: 'Oral route' }] },
+        },
+      ];
       const updates: UpdateMedicationRequestArgs = {
         status: updatedStatus,
         intent: 'order', // Change intent
         authoredOn: new Date().toISOString(),
         dosageInstruction: newDosageInstruction,
-        note: 'Patient advised to not exceed 4g/day.'
+        note: 'Patient advised to not exceed 4g/day.',
       };
       const updatedMedReq = await updateMedicationRequest(medReqToUpdate!.id!, updates);
       expect(updatedMedReq).toBeDefined();
@@ -222,25 +237,30 @@ describe('MedicationRequest Tool Integration Tests', () => {
 
     it('should clear optional fields when null is provided', async () => {
       expect(medReqToUpdate?.id).toBeDefined();
-       const initialEncounterId = testEncounter!.id!;
+      const initialEncounterId = testEncounter!.id!;
       // First, add an encounter to it
-      let tempUpdatedMedReq = await updateMedicationRequest(medReqToUpdate!.id!, { encounterId: initialEncounterId, note: 'Initial note' });
+      const tempUpdatedMedReq = await updateMedicationRequest(medReqToUpdate!.id!, {
+        encounterId: initialEncounterId,
+        note: 'Initial note',
+      });
       expect(tempUpdatedMedReq.encounter?.reference).toBe(`Encounter/${initialEncounterId}`);
       expect(tempUpdatedMedReq.note).toBeDefined();
 
       const updatesToClear: UpdateMedicationRequestArgs = {
         encounterId: null,
         note: null,
-        dosageInstruction: null
+        dosageInstruction: null,
       };
       const clearedMedReq = await updateMedicationRequest(medReqToUpdate!.id!, updatesToClear);
       expect(clearedMedReq.encounter).toBeUndefined();
       expect(clearedMedReq.note).toBeUndefined();
-      expect(clearedMedReq.dosageInstruction).toBeUndefined(); 
+      expect(clearedMedReq.dosageInstruction).toBeUndefined();
     });
 
     it('should throw an error if medication request ID is not provided', async () => {
-      await expect(updateMedicationRequest('', { status: 'active' })).rejects.toThrow('MedicationRequest ID is required');
+      await expect(updateMedicationRequest('', { status: 'active' })).rejects.toThrow(
+        'MedicationRequest ID is required',
+      );
     });
 
     it('should throw an error if updates object is empty', async () => {
@@ -251,12 +271,14 @@ describe('MedicationRequest Tool Integration Tests', () => {
   });
 
   describe('searchMedicationRequests', () => {
-    let medReq1: MedicationRequest | null, medReq2: MedicationRequest | null, medReq3_other_patient: MedicationRequest | null;
+    let medReq1: MedicationRequest | null,
+      medReq2: MedicationRequest | null,
+      medReq3_other_patient: MedicationRequest | null;
     const medCode1 = '197360'; // Atorvastatin 10mg tablet (Lipitor)
     const medText1 = 'Atorvastatin 10mg tablet';
     const medCode2 = '866924'; // Metformin 500 MG Extended Release Oral Tablet
     const medText2 = 'Metformin 500 MG ER Oral Tablet';
-    
+
     let searchPatientId: string;
     let searchPractitionerId: string;
     let otherPatientId: string;
@@ -268,50 +290,68 @@ describe('MedicationRequest Tool Integration Tests', () => {
       }
       searchPatientId = testPatient.id;
       searchPractitionerId = testPractitioner.id;
-      medReq1Identifier = `medreq-search-${randomUUID().substring(0,8)}`;
+      medReq1Identifier = `medreq-search-${randomUUID().substring(0, 8)}`;
 
       // Create another patient for exclusivity tests
-      const otherPatientArgs: CreatePatientArgs = { firstName: 'OtherMed', lastName: 'Patient', birthDate: '1990-01-01', gender: 'other' };
+      const otherPatientArgs: CreatePatientArgs = {
+        firstName: 'OtherMed',
+        lastName: 'Patient',
+        birthDate: '1990-01-01',
+        gender: 'other',
+      };
       const tempOtherPatient = await createPatient(otherPatientArgs);
-      if (!tempOtherPatient || !tempOtherPatient.id) throw new Error('Creation of other patient failed for search tests');
+      if (!tempOtherPatient || !tempOtherPatient.id)
+        throw new Error('Creation of other patient failed for search tests');
       otherPatientId = tempOtherPatient.id;
 
       medReq1 = await createMedicationRequest({
         status: 'active',
         intent: 'order',
-        medicationCodeableConcept: { coding: [{ system: rxnormSystem, code: medCode1, display: medText1 }], text: medText1 },
+        medicationCodeableConcept: {
+          coding: [{ system: rxnormSystem, code: medCode1, display: medText1 }],
+          text: medText1,
+        },
         subjectId: searchPatientId,
         requesterId: searchPractitionerId,
         authoredOn: '2023-01-15T10:00:00Z',
-        identifier: {value: medReq1Identifier, system: 'test-medreq-system'}
+        identifier: { value: medReq1Identifier, system: 'test-medreq-system' },
       });
 
       medReq2 = await createMedicationRequest({
         status: 'completed',
         intent: 'order',
-        medicationCodeableConcept: { coding: [{ system: rxnormSystem, code: medCode2, display: medText2 }], text: medText2 },
+        medicationCodeableConcept: {
+          coding: [{ system: rxnormSystem, code: medCode2, display: medText2 }],
+          text: medText2,
+        },
         subjectId: searchPatientId,
         requesterId: searchPractitionerId, // Same requester
-        authoredOn: '2023-02-20T11:00:00Z'
+        authoredOn: '2023-02-20T11:00:00Z',
       });
 
       medReq3_other_patient = await createMedicationRequest({
         status: 'active',
         intent: 'order',
-        medicationCodeableConcept: { coding: [{ system: rxnormSystem, code: medCode1, display: medText1 }], text: medText1 }, // Same med as medReq1
+        medicationCodeableConcept: {
+          coding: [{ system: rxnormSystem, code: medCode1, display: medText1 }],
+          text: medText1,
+        }, // Same med as medReq1
         subjectId: otherPatientId, // Different patient
         requesterId: searchPractitionerId,
-        authoredOn: '2023-03-10T09:00:00Z'
+        authoredOn: '2023-03-10T09:00:00Z',
       });
 
-      if (!medReq1 || !medReq2 || !medReq3_other_patient) throw new Error('Failed to create medication requests for search tests');
-      console.log(`Created medication requests for search tests: ${medReq1.id}, ${medReq2.id}, ${medReq3_other_patient.id}`);
+      if (!medReq1 || !medReq2 || !medReq3_other_patient)
+        throw new Error('Failed to create medication requests for search tests');
+      console.log(
+        `Created medication requests for search tests: ${medReq1.id}, ${medReq2.id}, ${medReq3_other_patient.id}`,
+      );
     });
 
     it('should find medication requests by patient ID', async () => {
       const results = await searchMedicationRequests({ patientId: searchPatientId });
       expect(results.length).toBeGreaterThanOrEqual(2);
-      const resultIds = results.map(r => r.id);
+      const resultIds = results.map((r) => r.id);
       expect(resultIds).toContain(medReq1!.id);
       expect(resultIds).toContain(medReq2!.id);
       expect(resultIds).not.toContain(medReq3_other_patient!.id);
@@ -319,53 +359,66 @@ describe('MedicationRequest Tool Integration Tests', () => {
 
     it('should find medication requests by status for a specific patient', async () => {
       const resultsActive = await searchMedicationRequests({ patientId: searchPatientId, status: 'active' });
-      expect(resultsActive.some(r => r.id === medReq1!.id)).toBe(true);
-      expect(resultsActive.every(r => r.status === 'active' && r.subject?.reference === `Patient/${searchPatientId}`)).toBe(true);
+      expect(resultsActive.some((r) => r.id === medReq1!.id)).toBe(true);
+      expect(
+        resultsActive.every((r) => r.status === 'active' && r.subject?.reference === `Patient/${searchPatientId}`),
+      ).toBe(true);
 
       const resultsCompleted = await searchMedicationRequests({ patientId: searchPatientId, status: 'completed' });
-      expect(resultsCompleted.some(r => r.id === medReq2!.id)).toBe(true);
-      expect(resultsCompleted.every(r => r.status === 'completed' && r.subject?.reference === `Patient/${searchPatientId}`)).toBe(true);
+      expect(resultsCompleted.some((r) => r.id === medReq2!.id)).toBe(true);
+      expect(
+        resultsCompleted.every(
+          (r) => r.status === 'completed' && r.subject?.reference === `Patient/${searchPatientId}`,
+        ),
+      ).toBe(true);
     });
 
     it('should find medication requests by intent', async () => {
       const results = await searchMedicationRequests({ patientId: searchPatientId, intent: 'order' });
       expect(results.length).toBeGreaterThanOrEqual(2); // Both medReq1 and medReq2 are 'order'
-      expect(results.every(r => r.intent === 'order')).toBe(true);
+      expect(results.every((r) => r.intent === 'order')).toBe(true);
     });
 
     it('should find medication requests by medication code', async () => {
       // Allow time for search indexing
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       // Test that code search works
       const resultsByCodeOnly = await searchMedicationRequests({ code: medCode1 });
       expect(resultsByCodeOnly.length).toBeGreaterThan(0);
-      expect(resultsByCodeOnly.every(r => r.medicationCodeableConcept?.coding?.some(c => c.code === medCode1))).toBe(true);
+      expect(
+        resultsByCodeOnly.every((r) => r.medicationCodeableConcept?.coding?.some((c) => c.code === medCode1)),
+      ).toBe(true);
     });
 
     it('should find medication requests by authoredOn date', async () => {
       // Using a range for the whole day to make the test more robust
-      const resultsRange = await searchMedicationRequests({ patientId: searchPatientId, authoredon: 'ge2023-01-15T00:00:00Z&authoredon=le2023-01-15T23:59:59Z' });
-      expect(resultsRange.some(r => r.id === medReq1!.id)).toBe(true);
+      const resultsRange = await searchMedicationRequests({
+        patientId: searchPatientId,
+        authoredon: 'ge2023-01-15T00:00:00Z&authoredon=le2023-01-15T23:59:59Z',
+      });
+      expect(resultsRange.some((r) => r.id === medReq1!.id)).toBe(true);
     });
-    
+
     it('should find medication requests by requester', async () => {
       const results = await searchMedicationRequests({ requester: `Practitioner/${searchPractitionerId}` });
       expect(results.length).toBeGreaterThanOrEqual(3); // All 3 created MRs have this requester
-      const resultIds = results.map(r => r.id);
+      const resultIds = results.map((r) => r.id);
       expect(resultIds).toContain(medReq1!.id);
       expect(resultIds).toContain(medReq2!.id);
       expect(resultIds).toContain(medReq3_other_patient!.id);
     });
 
     it('should find medication request by identifier', async () => {
-        const results = await searchMedicationRequests({ identifier: `${medReq1!.identifier![0].system}|${medReq1Identifier}` });
-        expect(results.length).toBeGreaterThanOrEqual(1);
-        expect(results.some(o => o.id === medReq1!.id)).toBe(true);
+      const results = await searchMedicationRequests({
+        identifier: `${medReq1!.identifier![0].system}|${medReq1Identifier}`,
+      });
+      expect(results.length).toBeGreaterThanOrEqual(1);
+      expect(results.some((o) => o.id === medReq1!.id)).toBe(true);
 
-        const resultsShort = await searchMedicationRequests({ identifier: medReq1Identifier });
-        expect(resultsShort.length).toBeGreaterThanOrEqual(1);
-        expect(resultsShort.some(o => o.id === medReq1!.id)).toBe(true);
+      const resultsShort = await searchMedicationRequests({ identifier: medReq1Identifier });
+      expect(resultsShort.length).toBeGreaterThanOrEqual(1);
+      expect(resultsShort.some((o) => o.id === medReq1!.id)).toBe(true);
     });
 
     it('should return an empty array for criteria that match no medication requests', async () => {
@@ -376,9 +429,11 @@ describe('MedicationRequest Tool Integration Tests', () => {
     it('should warn and return results or empty for search with no criteria', async () => {
       const consoleWarnSpy = jest.spyOn(console, 'warn');
       const results = await searchMedicationRequests({});
-      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('MedicationRequest search called with no specific criteria'));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('MedicationRequest search called with no specific criteria'),
+      );
       expect(results).toBeInstanceOf(Array);
       consoleWarnSpy.mockRestore();
     });
   });
-}); 
+});

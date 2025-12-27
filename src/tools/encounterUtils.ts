@@ -1,13 +1,24 @@
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
-import { Encounter, Patient, Practitioner, Organization, Reference, Identifier, CodeableConcept, Coding, Period, EncounterParticipant } from '@medplum/fhirtypes';
+import {
+  Encounter,
+  Patient,
+  Practitioner,
+  Organization,
+  Reference,
+  Identifier,
+  CodeableConcept,
+  Coding,
+  Period,
+  EncounterParticipant,
+} from '@medplum/fhirtypes';
 
 // Helper function to map class codes to Coding object
 function mapEncounterClass(classCode: string): Coding {
-    return {
-        system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', 
-        code: classCode,
-        display: classCode 
-    };
+  return {
+    system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+    code: classCode,
+    display: classCode,
+  };
 }
 
 /**
@@ -16,7 +27,16 @@ function mapEncounterClass(classCode: string): Coding {
  * Participants (Practitioner references) and serviceProvider (Organization reference) are highly recommended.
  */
 export interface CreateEncounterArgs {
-  status: 'planned' | 'arrived' | 'triaged' | 'in-progress' | 'onleave' | 'finished' | 'cancelled' | 'entered-in-error' | 'unknown';
+  status:
+    | 'planned'
+    | 'arrived'
+    | 'triaged'
+    | 'in-progress'
+    | 'onleave'
+    | 'finished'
+    | 'cancelled'
+    | 'entered-in-error'
+    | 'unknown';
   classCode: string; // e.g., AMB, IMP, EMER from HL7 v3 ActCode system
   patientId: string;
   practitionerIds?: string[];
@@ -25,8 +45,8 @@ export interface CreateEncounterArgs {
   typeSystem?: string; // e.g., http://terminology.hl7.org/CodeSystem/v3-ActCode
   typeDisplay?: string;
   periodStart?: string; // ISO 8601 DateTime string
-  periodEnd?: string;   // ISO 8601 DateTime string
-  reasonCode?: string;  // Code from a system like SNOMED CT
+  periodEnd?: string; // ISO 8601 DateTime string
+  reasonCode?: string; // Code from a system like SNOMED CT
   reasonSystem?: string;
   reasonDisplay?: string;
   identifierValue?: string; // Business identifier for the encounter
@@ -61,9 +81,12 @@ export async function createEncounter(args: CreateEncounterArgs): Promise<Encoun
   };
 
   if (args.practitionerIds && args.practitionerIds.length > 0) {
-    encounterResource.participant = args.practitionerIds.map(id => ({
-      individual: { reference: `Practitioner/${id}` }
-    } as EncounterParticipant));
+    encounterResource.participant = args.practitionerIds.map(
+      (id) =>
+        ({
+          individual: { reference: `Practitioner/${id}` },
+        }) as EncounterParticipant,
+    );
   }
 
   if (args.organizationId) {
@@ -164,7 +187,7 @@ export async function updateEncounter(encounterId: string, updates: UpdateEncoun
   }
 
   const { resourceType, id, ...safeUpdates } = updates as any;
-  
+
   // Handle class conversion
   if (typeof safeUpdates.class === 'string') {
     safeUpdates.class = mapEncounterClass(safeUpdates.class);
@@ -173,7 +196,7 @@ export async function updateEncounter(encounterId: string, updates: UpdateEncoun
     safeUpdates.class = mapEncounterClass(updates.classCode);
     delete safeUpdates.classCode; // Remove the convenience field
   }
-  
+
   const encounterToUpdate: Encounter = {
     ...existingEncounter,
     ...safeUpdates,
@@ -212,15 +235,15 @@ export interface EncounterSearchArgs {
  */
 export async function searchEncounters(searchArgs: EncounterSearchArgs): Promise<Encounter[]> {
   await ensureAuthenticated();
-  
+
   const searchCriteria: string[] = [];
 
   if (searchArgs.patientId) {
     searchCriteria.push(`subject=Patient/${searchArgs.patientId}`);
   }
   if (searchArgs.practitionerId) {
-    const practitionerRef = searchArgs.practitionerId.startsWith('Practitioner/') 
-      ? searchArgs.practitionerId 
+    const practitionerRef = searchArgs.practitionerId.startsWith('Practitioner/')
+      ? searchArgs.practitionerId
       : `Practitioner/${searchArgs.practitionerId}`;
     searchCriteria.push(`participant=${practitionerRef}`);
   }
@@ -244,10 +267,12 @@ export async function searchEncounters(searchArgs: EncounterSearchArgs): Promise
   }
 
   if (searchCriteria.length === 0) {
-    console.warn('Encounter search called with no specific criteria. This might return a large number of results or be inefficient.');
+    console.warn(
+      'Encounter search called with no specific criteria. This might return a large number of results or be inefficient.',
+    );
     return []; // Return empty array if no criteria are provided
   }
 
   const queryString = searchCriteria.join('&');
   return medplum.searchResources('Encounter', queryString);
-} 
+}

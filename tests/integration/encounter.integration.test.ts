@@ -62,8 +62,8 @@ describe('Encounter Tool Integration Tests', () => {
         reasonCode: '185349003', // General examination of patient (SNOMED CT)
         reasonSystem: 'http://snomed.info/sct',
         reasonDisplay: 'General examination of patient',
-        identifierValue: `ENC-${randomUUID().substring(0,8)}`,
-        identifierSystem: 'urn:ietf:rfc:3986'
+        identifierValue: `ENC-${randomUUID().substring(0, 8)}`,
+        identifierSystem: 'urn:ietf:rfc:3986',
       };
 
       const newEncounter = await createEncounter(encounterArgs);
@@ -118,7 +118,7 @@ describe('Encounter Tool Integration Tests', () => {
         classCode: 'HH', // Home Health
         patientId: testPatient.id,
         practitionerIds: [testPractitioner.id],
-        identifierValue: `GET-TEST-${randomUUID().substring(0,8)}`
+        identifierValue: `GET-TEST-${randomUUID().substring(0, 8)}`,
       };
       createdEncounter = await createEncounter(encounterArgs);
       expect(createdEncounter).toBeDefined();
@@ -154,7 +154,9 @@ describe('Encounter Tool Integration Tests', () => {
       // @ts-ignore: Testing invalid input purposefully
       await expect(getEncounterById({})).rejects.toThrow('Encounter ID is required to fetch an encounter.');
       // @ts-ignore: Testing invalid input purposefully
-      await expect(getEncounterById({ encounterId: '' })).rejects.toThrow('Encounter ID is required to fetch an encounter.');
+      await expect(getEncounterById({ encounterId: '' })).rejects.toThrow(
+        'Encounter ID is required to fetch an encounter.',
+      );
     });
   });
 
@@ -174,13 +176,15 @@ describe('Encounter Tool Integration Tests', () => {
         status: initialStatus,
         classCode: initialClassCode,
         patientId: testPatient.id,
-        identifierValue: `UPDATE-TEST-${randomUUID().substring(0,8)}`
+        identifierValue: `UPDATE-TEST-${randomUUID().substring(0, 8)}`,
       };
       encounterToUpdate = await createEncounter(encounterArgs);
       expect(encounterToUpdate).toBeDefined();
       expect(encounterToUpdate).not.toBeNull();
       if (!encounterToUpdate) throw new Error('Test encounter creation failed for updateEncounter tests');
-      console.log(`Created encounter for update test: ${encounterToUpdate.id}, status: ${encounterToUpdate.status}, class: ${encounterToUpdate.class.code}`);
+      console.log(
+        `Created encounter for update test: ${encounterToUpdate.id}, status: ${encounterToUpdate.status}, class: ${encounterToUpdate.class.code}`,
+      );
     });
 
     it('should update an existing encounter successfully (e.g., status and class)', async () => {
@@ -197,26 +201,34 @@ describe('Encounter Tool Integration Tests', () => {
 
       expect(updatedEncounter).toBeDefined();
       expect(updatedEncounter).not.toBeNull();
-      expect(updatedEncounter!.id).toBe(encounterToUpdate!.id);
-      expect(updatedEncounter!.status).toBe(updatedStatus);
-      expect(updatedEncounter!.class?.code).toBe(updatedClassCode); // Class should have been converted to Coding
-      expect(updatedEncounter!.class?.system).toBe('http://terminology.hl7.org/CodeSystem/v3-ActCode');
-      expect(updatedEncounter!.period?.start).toBeDefined();
-      console.log(`Updated encounter: ${updatedEncounter!.id}, new status: ${updatedEncounter!.status}, new class: ${updatedEncounter!.class?.code}`);
+      expect(updatedEncounter.id).toBe(encounterToUpdate!.id);
+      expect(updatedEncounter.status).toBe(updatedStatus);
+      expect(updatedEncounter.class?.code).toBe(updatedClassCode); // Class should have been converted to Coding
+      expect(updatedEncounter.class?.system).toBe('http://terminology.hl7.org/CodeSystem/v3-ActCode');
+      expect(updatedEncounter.period?.start).toBeDefined();
+      console.log(
+        `Updated encounter: ${updatedEncounter.id}, new status: ${updatedEncounter.status}, new class: ${updatedEncounter.class?.code}`,
+      );
     });
 
     it('should throw an error if encounter ID is not provided', async () => {
-      await expect(updateEncounter('', { status: 'finished' })).rejects.toThrow('Encounter ID is required to update an encounter.');
+      await expect(updateEncounter('', { status: 'finished' })).rejects.toThrow(
+        'Encounter ID is required to update an encounter.',
+      );
     });
 
     it('should throw an error if updates object is empty or null', async () => {
       expect(encounterToUpdate).toBeDefined();
       expect(encounterToUpdate!.id).toBeDefined();
-      // @ts-ignore: Testing invalid input purposefully 
-      await expect(updateEncounter(encounterToUpdate!.id!, null)).rejects.toThrow('Updates object cannot be empty for updating an encounter.');
-      await expect(updateEncounter(encounterToUpdate!.id!, {})).rejects.toThrow('Updates object cannot be empty for updating an encounter.');
+      // @ts-ignore: Testing invalid input purposefully
+      await expect(updateEncounter(encounterToUpdate!.id!, null)).rejects.toThrow(
+        'Updates object cannot be empty for updating an encounter.',
+      );
+      await expect(updateEncounter(encounterToUpdate!.id!, {})).rejects.toThrow(
+        'Updates object cannot be empty for updating an encounter.',
+      );
     });
-    
+
     it('should correctly update encounter with full class object provided in updates', async () => {
       expect(encounterToUpdate).toBeDefined();
       expect(encounterToUpdate!.id).toBeDefined();
@@ -224,7 +236,7 @@ describe('Encounter Tool Integration Tests', () => {
       const fullClassCoding: import('@medplum/fhirtypes').Coding = {
         system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
         code: 'EMER', // Emergency
-        display: 'emergency'
+        display: 'emergency',
       };
       const updates: UpdateEncounterArgs = {
         class: fullClassCoding,
@@ -233,22 +245,22 @@ describe('Encounter Tool Integration Tests', () => {
       const updatedEncounter = await updateEncounter(encounterToUpdate!.id!, updates);
       expect(updatedEncounter).toBeDefined();
       // @ts-ignore // Linter seems confused about Coding vs string comparison here
-      expect(updatedEncounter!.class).toEqual(fullClassCoding);
-      console.log(`Updated encounter class with full object: ${updatedEncounter!.class?.code}`);
+      expect(updatedEncounter.class).toEqual(fullClassCoding);
+      console.log(`Updated encounter class with full object: ${updatedEncounter.class?.code}`);
     });
   });
 
   describe('searchEncounters', () => {
     // Create a few encounters with varying details to test search functionality
     let enc1: Encounter | null, enc2: Encounter | null, enc3: Encounter | null;
-    let searchPatientId: string | undefined;     // Declare here, assign in beforeAll
+    let searchPatientId: string | undefined; // Declare here, assign in beforeAll
     let searchPractitionerId: string | undefined; // Declare here, assign in beforeAll
     const commonIdentifierSystem = 'http://example.com/encounter-ids';
-    const uniqueIdentifier1 = `SEARCH-TEST-${randomUUID().substring(0,8)}`;
-    const uniqueIdentifier2 = `SEARCH-TEST-${randomUUID().substring(0,8)}`;
+    const uniqueIdentifier1 = `SEARCH-TEST-${randomUUID().substring(0, 8)}`;
+    const uniqueIdentifier2 = `SEARCH-TEST-${randomUUID().substring(0, 8)}`;
 
     beforeAll(async () => {
-      searchPatientId = testPatient?.id;         // Assign after outer beforeAll has run
+      searchPatientId = testPatient?.id; // Assign after outer beforeAll has run
       searchPractitionerId = testPractitioner?.id; // Assign after outer beforeAll has run
 
       if (!searchPatientId || !searchPractitionerId) {
@@ -256,8 +268,8 @@ describe('Encounter Tool Integration Tests', () => {
       }
       // Encounter 1: Specific patient, practitioner, status 'finished', specific class, specific date
       enc1 = await createEncounter({
-        patientId: searchPatientId!,
-        practitionerIds: [searchPractitionerId!],
+        patientId: searchPatientId,
+        practitionerIds: [searchPractitionerId],
         status: 'finished',
         classCode: 'AMB', // Ambulatory
         typeCode: 'CHECKUP',
@@ -279,7 +291,7 @@ describe('Encounter Tool Integration Tests', () => {
       // Encounter 3: Different patient (if possible, or use same for simplicity if another test patient isn't easy to make here)
       // For now, use same patient but different practitioner and details to ensure it can be differentiated or found by other criteria
       // Let's assume we need another practitioner for this test.
-      const otherPractitionerArgs: CreatePractitionerArgs = { givenName: 'SearchTestDoc', familyName: 'Other'};
+      const otherPractitionerArgs: CreatePractitionerArgs = { givenName: 'SearchTestDoc', familyName: 'Other' };
       const otherPractitioner = await createPractitioner(otherPractitionerArgs);
       expect(otherPractitioner?.id).toBeDefined();
 
@@ -287,67 +299,71 @@ describe('Encounter Tool Integration Tests', () => {
         status: 'finished',
         classCode: 'EMER', // Emergency
         patientId: searchPatientId, // Could be a different patient ID if available
-        practitionerIds: [otherPractitioner!.id!],
+        practitionerIds: [otherPractitioner.id!],
         typeCode: 'ACUTEILL',
         periodStart: '2023-01-20T14:00:00Z',
       });
-      expect(enc1).toBeDefined(); expect(enc2).toBeDefined(); expect(enc3).toBeDefined();
+      expect(enc1).toBeDefined();
+      expect(enc2).toBeDefined();
+      expect(enc3).toBeDefined();
       console.log(`Created encounters for search tests: ${enc1?.id}, ${enc2?.id}, ${enc3?.id}`);
     });
 
     it('should find encounters by patientId', async () => {
       const results = await searchEncounters({ patientId: searchPatientId! });
       expect(results.length).toBeGreaterThanOrEqual(3); // enc1, enc2, enc3 are for this patient
-      expect(results.some(e => e.id === enc1!.id)).toBe(true);
-      expect(results.some(e => e.id === enc2!.id)).toBe(true);
-      expect(results.some(e => e.id === enc3!.id)).toBe(true);
+      expect(results.some((e) => e.id === enc1!.id)).toBe(true);
+      expect(results.some((e) => e.id === enc2!.id)).toBe(true);
+      expect(results.some((e) => e.id === enc3!.id)).toBe(true);
     });
 
     it('should find encounters by status', async () => {
       const resultsFinished = await searchEncounters({ patientId: searchPatientId!, status: 'finished' });
-      expect(resultsFinished.some(e => e.id === enc1!.id)).toBe(true);
-      expect(resultsFinished.some(e => e.id === enc3!.id)).toBe(true); // enc3 also 'finished' for this patient
-      expect(resultsFinished.every(e => e.status === 'finished')).toBe(true);
+      expect(resultsFinished.some((e) => e.id === enc1!.id)).toBe(true);
+      expect(resultsFinished.some((e) => e.id === enc3!.id)).toBe(true); // enc3 also 'finished' for this patient
+      expect(resultsFinished.every((e) => e.status === 'finished')).toBe(true);
 
       const resultsPlanned = await searchEncounters({ patientId: searchPatientId!, status: 'planned' });
-      expect(resultsPlanned.some(e => e.id === enc2!.id)).toBe(true);
-      expect(resultsPlanned.every(e => e.status === 'planned')).toBe(true);
+      expect(resultsPlanned.some((e) => e.id === enc2!.id)).toBe(true);
+      expect(resultsPlanned.every((e) => e.status === 'planned')).toBe(true);
     });
 
     it('should find encounters by classCode', async () => {
       const resultsAMB = await searchEncounters({ patientId: searchPatientId!, classCode: 'AMB' });
-      expect(resultsAMB.some(e => e.id === enc1!.id)).toBe(true);
+      expect(resultsAMB.some((e) => e.id === enc1!.id)).toBe(true);
       // We cannot guarantee every AMB encounter for this patient is enc1 or related test data only,
       // so the .every check might be too strict if other AMB encounters exist for this patient.
       // We should ensure that the ones we expect are there and their class is correct.
-      const foundEnc1 = resultsAMB.find(e => e.id === enc1!.id);
+      const foundEnc1 = resultsAMB.find((e) => e.id === enc1!.id);
       expect(foundEnc1?.class?.code).toBe('AMB');
 
       const resultsIMP = await searchEncounters({ patientId: searchPatientId!, classCode: 'IMP' });
-      expect(resultsIMP.some(e => e.id === enc2!.id)).toBe(true);
-      const foundEnc2 = resultsIMP.find(e => e.id === enc2!.id);
+      expect(resultsIMP.some((e) => e.id === enc2!.id)).toBe(true);
+      const foundEnc2 = resultsIMP.find((e) => e.id === enc2!.id);
       expect(foundEnc2?.class?.code).toBe('IMP');
     });
 
     it('should find encounters by patientId and status', async () => {
       const results = await searchEncounters({ patientId: searchPatientId!, status: 'finished' });
-      expect(results.some(e => e.id === enc1!.id)).toBe(true);
-      expect(results.some(e => e.id === enc3!.id)).toBe(true);
-      expect(results.every(e => e.status === 'finished' && e.subject?.reference === `Patient/${searchPatientId}`)).toBe(true);
+      expect(results.some((e) => e.id === enc1!.id)).toBe(true);
+      expect(results.some((e) => e.id === enc3!.id)).toBe(true);
+      expect(
+        results.every((e) => e.status === 'finished' && e.subject?.reference === `Patient/${searchPatientId}`),
+      ).toBe(true);
     });
-    
+
     it('should find encounters by specific identifier', async () => {
       const results = await searchEncounters({ identifier: uniqueIdentifier1 });
       expect(results.length).toBe(1);
       expect(results[0].id).toBe(enc1!.id);
-      expect(results[0].identifier?.some(id => id.value === uniqueIdentifier1)).toBe(true);
+      expect(results[0].identifier?.some((id) => id.value === uniqueIdentifier1)).toBe(true);
     });
-    
+
     it('should find encounters by date', async () => {
       // Allow time for search indexing
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
-      const results = await searchEncounters({ date: 'ge2023-01-15T00:00:00Z&date=le2023-01-15T23:59:59Z' }); 
+      const results = await searchEncounters({ date: 'ge2023-01-15T00:00:00Z&date=le2023-01-15T23:59:59Z' });
       // Just verify the search doesn't break and returns reasonable results.
       // Specific ID matching is removed to avoid timing-related flakes.
       expect(results).toBeInstanceOf(Array);
@@ -363,11 +379,11 @@ describe('Encounter Tool Integration Tests', () => {
       const results = await searchEncounters({});
       // The current searchEncounters util might return all encounters or an empty array depending on its internal logic for no criteria.
       // It logs a warning. We primarily check the warning was logged.
-      expect(consoleWarnSpy).toHaveBeenCalledWith(expect.stringContaining('Encounter search called with no specific criteria'));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Encounter search called with no specific criteria'),
+      );
       expect(results).toBeInstanceOf(Array); // Should always return an array
       consoleWarnSpy.mockRestore();
     });
-
   });
-
-}); 
+});

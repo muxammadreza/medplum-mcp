@@ -1,11 +1,4 @@
-import {
-  Medication,
-  OperationOutcome,
-  Reference,
-  Organization,
-  CodeableConcept,
-  Identifier,
-} from '@medplum/fhirtypes';
+import { Medication, OperationOutcome, Reference, Organization, CodeableConcept, Identifier } from '@medplum/fhirtypes';
 import {
   createMedication,
   getMedicationById,
@@ -228,29 +221,48 @@ describe('Medication Utils Integration Tests', () => {
     const medicationsForSearch: { args: CreateMedicationArgs; id?: string }[] = [
       {
         args: {
-          code: { coding: [{ system: searchTestSystem, code: 'SRCH-001', display: 'Search Med Alpha (Active)' }], text: 'Search Med Alpha' },
+          code: {
+            coding: [{ system: searchTestSystem, code: 'SRCH-001', display: 'Search Med Alpha (Active)' }],
+            text: 'Search Med Alpha',
+          },
           status: 'active',
           identifier: [{ system: 'urn:test:med-ids', value: 'ID-ALPHA-001' }],
         },
       },
       {
         args: {
-          code: { coding: [{ system: searchTestSystem, code: 'SRCH-002', display: 'Search Med Beta (Inactive)' }], text: 'Search Med Beta' },
+          code: {
+            coding: [{ system: searchTestSystem, code: 'SRCH-002', display: 'Search Med Beta (Inactive)' }],
+            text: 'Search Med Beta',
+          },
           status: 'inactive',
           identifier: [{ system: 'urn:test:med-ids', value: 'ID-BETA-002' }],
         },
       },
       {
         args: {
-          code: { coding: [{ system: searchTestSystem, code: 'SRCH-003', display: 'Search Med Gamma (Active)' }], text: 'Search Med Gamma' },
+          code: {
+            coding: [{ system: searchTestSystem, code: 'SRCH-003', display: 'Search Med Gamma (Active)' }],
+            text: 'Search Med Gamma',
+          },
           status: 'active',
           identifier: [{ system: 'urn:test:med-ids', value: 'ID-GAMMA-003' }],
           form: { coding: [{ system: 'http://snomed.info/sct', code: '385055001' }], text: 'Oral tablet' }, // Oral Tablet
         },
       },
       {
-        args: { // Another active one with a different code system for variety
-          code: { coding: [{ system: 'http://www.another-sys.com/meds', code: 'ASYS-100', display: 'Another Sys Med Delta (Active)' }], text: 'Another Sys Med Delta' },
+        args: {
+          // Another active one with a different code system for variety
+          code: {
+            coding: [
+              {
+                system: 'http://www.another-sys.com/meds',
+                code: 'ASYS-100',
+                display: 'Another Sys Med Delta (Active)',
+              },
+            ],
+            text: 'Another Sys Med Delta',
+          },
           status: 'active',
         },
       },
@@ -267,7 +279,7 @@ describe('Medication Utils Integration Tests', () => {
         }
       }
       // Ensure all medications were created, otherwise tests might be unreliable
-      expect(medicationsForSearch.every(m => m.id)).toBe(true);
+      expect(medicationsForSearch.every((m) => m.id)).toBe(true);
     });
 
     test('should return OperationOutcome if no search criteria are provided', async () => {
@@ -276,8 +288,10 @@ describe('Medication Utils Integration Tests', () => {
       expect(Array.isArray(result)).toBe(false);
       if (!Array.isArray(result)) {
         expect(result.resourceType).toBe('OperationOutcome');
-        const outcome = result as OperationOutcome;
-        expect(outcome.issue?.[0]?.diagnostics).toContain('At least one search criterion (code, identifier, or status) must be provided');
+        const outcome = result;
+        expect(outcome.issue?.[0]?.diagnostics).toContain(
+          'At least one search criterion (code, identifier, or status) must be provided',
+        );
       }
     });
 
@@ -286,7 +300,7 @@ describe('Medication Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(1);
-      expect(meds.some(m => m.code?.coding?.[0]?.code === 'SRCH-001')).toBe(true);
+      expect(meds.some((m) => m.code?.coding?.[0]?.code === 'SRCH-001')).toBe(true);
     });
 
     test('should find medications by code (value only)', async () => {
@@ -294,15 +308,15 @@ describe('Medication Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(1);
-      expect(meds.some(m => m.code?.coding?.[0]?.code === 'SRCH-002')).toBe(true);
+      expect(meds.some((m) => m.code?.coding?.[0]?.code === 'SRCH-002')).toBe(true);
     });
-    
+
     test('should find medications by identifier (system|value)', async () => {
       const result = await searchMedications({ identifier: 'urn:test:med-ids|ID-ALPHA-001' });
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(1);
-      expect(meds.some(m => m.identifier?.[0]?.value === 'ID-ALPHA-001')).toBe(true);
+      expect(meds.some((m) => m.identifier?.[0]?.value === 'ID-ALPHA-001')).toBe(true);
     });
 
     test('should find medications by identifier (value only)', async () => {
@@ -310,7 +324,7 @@ describe('Medication Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(1);
-      expect(meds.some(m => m.identifier?.[0]?.value === 'ID-BETA-002')).toBe(true);
+      expect(meds.some((m) => m.identifier?.[0]?.value === 'ID-BETA-002')).toBe(true);
     });
 
     test('should find medications by status (active)', async () => {
@@ -318,7 +332,7 @@ describe('Medication Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(3); // SRCH-001, SRCH-003, ASYS-100
-      expect(meds.every(m => m.status === 'active')).toBe(true);
+      expect(meds.every((m) => m.status === 'active')).toBe(true);
     });
 
     test('should find medications by status (inactive)', async () => {
@@ -326,10 +340,10 @@ describe('Medication Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBeGreaterThanOrEqual(1); // SRCH-002
-      expect(meds.every(m => m.status === 'inactive')).toBe(true);
-      expect(meds.some(m => m.code?.coding?.[0]?.code === 'SRCH-002')).toBe(true);
+      expect(meds.every((m) => m.status === 'inactive')).toBe(true);
+      expect(meds.some((m) => m.code?.coding?.[0]?.code === 'SRCH-002')).toBe(true);
     });
-    
+
     test('should find medications by a combination of code and status', async () => {
       const result = await searchMedications({ code: `${searchTestSystem}|SRCH-003`, status: 'active' });
       expect(result).toBeInstanceOf(Array);
@@ -349,11 +363,11 @@ describe('Medication Utils Integration Tests', () => {
     test('should find medication with specific form by code (indirectly, by checking created data)', async () => {
       // This test ensures that the medication with a form was created and can be found by its code.
       // The search function itself doesn't directly search by form.
-      const result = await searchMedications({ code: `${searchTestSystem}|SRCH-003`});
+      const result = await searchMedications({ code: `${searchTestSystem}|SRCH-003` });
       expect(result).toBeInstanceOf(Array);
       const meds = result as Medication[];
       expect(meds.length).toBe(1);
       expect(meds[0].form?.coding?.[0]?.code).toBe('385055001');
     });
   });
-}); 
+});

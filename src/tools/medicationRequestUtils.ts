@@ -1,14 +1,14 @@
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
-import { 
-  MedicationRequest, 
-  Patient, 
-  Practitioner, 
-  Encounter, 
-  Reference, 
-  Identifier, 
-  CodeableConcept, 
+import {
+  MedicationRequest,
+  Patient,
+  Practitioner,
+  Encounter,
+  Reference,
+  Identifier,
+  CodeableConcept,
   Dosage,
-  Period
+  Period,
 } from '@medplum/fhirtypes';
 
 // Interface for creating a MedicationRequest
@@ -38,7 +38,7 @@ export interface UpdateMedicationRequestArgs {
   intent?: MedicationRequest['intent'];
   medicationCodeableConcept?: CodeableConcept | null;
   // medicationReference?: Reference | null;
-  subjectId?: string | null; 
+  subjectId?: string | null;
   encounterId?: string | null;
   authoredOn?: string | null;
   requesterId?: string | null;
@@ -76,7 +76,8 @@ export async function createMedicationRequest(args: CreateMedicationRequestArgs)
   if (!args.intent) {
     throw new Error('MedicationRequest intent is required.');
   }
-  if (!args.medicationCodeableConcept) { // Add || !args.medicationReference if that's supported
+  if (!args.medicationCodeableConcept) {
+    // Add || !args.medicationReference if that's supported
     throw new Error('Medication (medicationCodeableConcept or medicationReference) is required.');
   }
   if (!args.subjectId) {
@@ -136,7 +137,10 @@ export async function getMedicationRequestById(args: GetMedicationRequestByIdArg
  * @param updates - An object containing the fields to update.
  * @returns The updated MedicationRequest resource.
  */
-export async function updateMedicationRequest(medicationRequestId: string, updates: UpdateMedicationRequestArgs): Promise<MedicationRequest> {
+export async function updateMedicationRequest(
+  medicationRequestId: string,
+  updates: UpdateMedicationRequestArgs,
+): Promise<MedicationRequest> {
   await ensureAuthenticated();
 
   if (!medicationRequestId) {
@@ -175,14 +179,15 @@ export async function updateMedicationRequest(medicationRequestId: string, updat
       }
     }
   }
-  
+
   // Handle specific conversions
   if (typeof noteInput === 'string') {
     workingUpdates.note = [{ text: noteInput }];
   } else if (noteInput === null) {
     workingUpdates.note = undefined;
-  } else if (noteInput !== undefined) { // If it was already Annotation[]
-    workingUpdates.note = noteInput as any; 
+  } else if (noteInput !== undefined) {
+    // If it was already Annotation[]
+    workingUpdates.note = noteInput as any;
   }
 
   if (identifierInput && typeof identifierInput === 'object') {
@@ -215,7 +220,7 @@ export async function updateMedicationRequest(medicationRequestId: string, updat
     workingUpdates.medicationCodeableConcept = medicationCodeableConceptInput;
     // workingUpdates.medicationReference = undefined; // Ensure exclusivity if medicationReference is also handled
   }
-  
+
   // Similar logic for medicationReference if it gets added
   // if (medicationReferenceInput === null) {
   //   workingUpdates.medicationReference = undefined;
@@ -245,7 +250,9 @@ export async function searchMedicationRequests(args: SearchMedicationRequestsArg
   const searchCriteria: string[] = [];
 
   if (Object.keys(args).length === 0) {
-    console.warn('MedicationRequest search called with no specific criteria. This might return a large number of results or be inefficient.');
+    console.warn(
+      'MedicationRequest search called with no specific criteria. This might return a large number of results or be inefficient.',
+    );
   }
 
   if (args.patientId) {
@@ -277,12 +284,12 @@ export async function searchMedicationRequests(args: SearchMedicationRequestsArg
     console.warn('MedicationRequest search arguments provided but did not map to any known search parameters:', args);
     return [];
   }
-  
+
   // Only search if there are criteria or if no arguments were provided (search all)
   if (searchCriteria.length > 0 || Object.keys(args).length === 0) {
-      const queryString = searchCriteria.join('&');
-      return medplum.searchResources('MedicationRequest', queryString);
+    const queryString = searchCriteria.join('&');
+    return medplum.searchResources('MedicationRequest', queryString);
   } else {
-      return []; // Should be caught by the warning above, but as a fallback
+    return []; // Should be caught by the warning above, but as a fallback
   }
-} 
+}

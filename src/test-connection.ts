@@ -26,4 +26,4 @@ async function testMedplumConnection() {
   }
 }
 
-testMedplumConnection(); 
+testMedplumConnection();

@@ -47,4 +47,4 @@ export async function ensureAuthenticated(): Promise<void> {
     // You might want to check if the token is close to expiring and refresh proactively
     // but the SDK should handle this automatically on the next request if needed.
   }
-} 
+}

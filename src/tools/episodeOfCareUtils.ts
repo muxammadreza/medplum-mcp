@@ -79,16 +79,17 @@ export async function createEpisodeOfCare(
       patient: { reference: `Patient/${args.patientId}` },
       type: args.type,
       identifier: args.identifier,
-      period: args.periodStart || args.periodEnd ? {
-        start: args.periodStart,
-        end: args.periodEnd,
-      } : undefined,
+      period:
+        args.periodStart || args.periodEnd
+          ? {
+              start: args.periodStart,
+              end: args.periodEnd,
+            }
+          : undefined,
       managingOrganization: args.managingOrganizationId
         ? { reference: `Organization/${args.managingOrganizationId}` }
         : undefined,
-      careManager: args.careManagerId
-        ? { reference: `Practitioner/${args.careManagerId}` }
-        : undefined,
+      careManager: args.careManagerId ? { reference: `Practitioner/${args.careManagerId}` } : undefined,
       // team: args.teamMemberIds?.map(id => ({ reference: `CareTeam/${id}` })) // If using CareTeam IDs
     };
 
@@ -132,10 +133,7 @@ export async function getEpisodeOfCareById(
     if (!episodeOfCareId) {
       throw new Error('EpisodeOfCare ID is required.');
     }
-    const result = (await medplumClient.readResource(
-      'EpisodeOfCare',
-      episodeOfCareId,
-    )) as EpisodeOfCare | null;
+    const result = (await medplumClient.readResource('EpisodeOfCare', episodeOfCareId)) as EpisodeOfCare | null;
     console.log(result ? 'EpisodeOfCare retrieved:' : 'EpisodeOfCare not found:', episodeOfCareId);
     return result;
   } catch (error: any) {
@@ -195,7 +193,7 @@ export async function updateEpisodeOfCare(
         ],
       };
     }
-    
+
     // Construct the updated resource. Be careful with deep merges or partial updates.
     // A common strategy for utilities is to merge top-level fields or replace arrays.
     const resourceToUpdate: EpisodeOfCare = {
@@ -209,13 +207,13 @@ export async function updateEpisodeOfCare(
     if (updates.managingOrganizationId) {
       resourceToUpdate.managingOrganization = { reference: `Organization/${updates.managingOrganizationId}` };
     } else if (updates.hasOwnProperty('managingOrganizationId') && updates.managingOrganizationId === null) {
-        delete resourceToUpdate.managingOrganization; // Allow unsetting
+      delete resourceToUpdate.managingOrganization; // Allow unsetting
     }
 
     if (updates.careManagerId) {
       resourceToUpdate.careManager = { reference: `Practitioner/${updates.careManagerId}` };
     } else if (updates.hasOwnProperty('careManagerId') && updates.careManagerId === null) {
-        delete resourceToUpdate.careManager; // Allow unsetting
+      delete resourceToUpdate.careManager; // Allow unsetting
     }
 
     // Handle period update
@@ -230,24 +228,24 @@ export async function updateEpisodeOfCare(
       newPeriod.end = updates.periodEnd; // Allow null/undefined to clear
       periodUpdated = true;
     }
-    if(periodUpdated){
-        if(newPeriod.start || newPeriod.end){
-            resourceToUpdate.period = newPeriod;
-        } else {
-            delete resourceToUpdate.period;
-        }
+    if (periodUpdated) {
+      if (newPeriod.start || newPeriod.end) {
+        resourceToUpdate.period = newPeriod;
+      } else {
+        delete resourceToUpdate.period;
+      }
     }
 
     // Remove undefined top-level fields from the merged object that might have been introduced by spread
     Object.keys(resourceToUpdate).forEach(
-        (key) => (resourceToUpdate as any)[key] === undefined && delete (resourceToUpdate as any)[key]
+      (key) => (resourceToUpdate as any)[key] === undefined && delete (resourceToUpdate as any)[key],
     );
 
     const result = (await medplumClient.updateResource(resourceToUpdate)) as EpisodeOfCare;
     console.log('EpisodeOfCare updated successfully:', result.id);
     return result;
   } catch (error: any) {
-     if (error.outcome && error.outcome.issue && error.outcome.issue[0]?.code === 'not-found') {
+    if (error.outcome && error.outcome.issue && error.outcome.issue[0]?.code === 'not-found') {
       return {
         resourceType: 'OperationOutcome',
         issue: [
@@ -293,25 +291,32 @@ export async function searchEpisodesOfCare(
       if (value !== undefined && value !== null && value !== '') {
         // Standard FHIR search parameters for EpisodeOfCare:
         // patient, status, type, date, identifier, organization, care-manager
-        if (key === 'patient' || key === 'status' || key === 'type' || key === 'identifier' || key === 'organization' || key === 'care-manager') {
-            searchCriteria.push(`${key}=${encodeURIComponent(String(value))}`);
-            hasCriteria = true;
+        if (
+          key === 'patient' ||
+          key === 'status' ||
+          key === 'type' ||
+          key === 'identifier' ||
+          key === 'organization' ||
+          key === 'care-manager'
+        ) {
+          searchCriteria.push(`${key}=${encodeURIComponent(String(value))}`);
+          hasCriteria = true;
         } else if (key === 'date') {
-            if (Array.isArray(value)) {
-              value.forEach(d => {
-                searchCriteria.push(`date=${encodeURIComponent(d)}`);
-              });
-            } else {
-              // Handle single date string, which might contain '&' for ranges not split by client
-              // This logic splits a single string like 'ge2023-01-01&le2023-12-31' into two params
-              const dateParams = String(value).split('&');
-              dateParams.forEach(dp => {
-                searchCriteria.push(`date=${encodeURIComponent(dp)}`);
-              });
-            }
-            hasCriteria = true;
+          if (Array.isArray(value)) {
+            value.forEach((d) => {
+              searchCriteria.push(`date=${encodeURIComponent(d)}`);
+            });
+          } else {
+            // Handle single date string, which might contain '&' for ranges not split by client
+            // This logic splits a single string like 'ge2023-01-01&le2023-12-31' into two params
+            const dateParams = String(value).split('&');
+            dateParams.forEach((dp) => {
+              searchCriteria.push(`date=${encodeURIComponent(dp)}`);
+            });
+          }
+          hasCriteria = true;
         } else {
-            console.warn(`Unsupported search parameter for EpisodeOfCare: ${key}`);
+          console.warn(`Unsupported search parameter for EpisodeOfCare: ${key}`);
         }
       }
     });
@@ -352,4 +357,4 @@ export async function searchEpisodesOfCare(
     }
     return outcome;
   }
-} 
+}

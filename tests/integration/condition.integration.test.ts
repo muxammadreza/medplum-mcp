@@ -1,10 +1,4 @@
-import {
-  Condition,
-  OperationOutcome,
-  Patient,
-  Reference,
-  CodeableConcept,
-} from '@medplum/fhirtypes';
+import { Condition, OperationOutcome, Patient, Reference, CodeableConcept } from '@medplum/fhirtypes';
 import {
   createCondition,
   getConditionById,
@@ -98,13 +92,17 @@ describe('Condition Utils Integration Tests', () => {
         },
         clinicalStatus: { coding: [ConditionClinicalStatusCodes.RESOLVED] },
         verificationStatus: { coding: [ConditionVerificationStatusCodes.CONFIRMED] },
-        category: [{
-          coding: [{
-            system: 'http://terminology.hl7.org/CodeSystem/condition-category',
-            code: 'encounter-diagnosis',
-            display: 'Encounter Diagnosis',
-          }]
-        }],
+        category: [
+          {
+            coding: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/condition-category',
+                code: 'encounter-diagnosis',
+                display: 'Encounter Diagnosis',
+              },
+            ],
+          },
+        ],
         onsetString: 'Approximately 2 years ago',
         recordedDate,
       };
@@ -139,9 +137,9 @@ describe('Condition Utils Integration Tests', () => {
     beforeAll(async () => {
       const result = await createCondition({
         subject: { reference: `Patient/${testPatient.id}` },
-        code: { 
+        code: {
           coding: [{ system: 'http://test.com', code: 'GET-TEST', display: 'Condition for get test' }],
-          text: 'Condition for get test' 
+          text: 'Condition for get test',
         },
       });
       testCondition = result as Condition;
@@ -169,15 +167,16 @@ describe('Condition Utils Integration Tests', () => {
   describe('updateCondition', () => {
     let conditionToUpdate: Condition;
 
-    beforeEach(async () => { // Use beforeEach to get a fresh condition for each update test
+    beforeEach(async () => {
+      // Use beforeEach to get a fresh condition for each update test
       const result = await createCondition({
         subject: { reference: `Patient/${testPatient.id}` },
-        code: { 
+        code: {
           coding: [{ system: 'http://test.com', code: 'UPDATE-TEST', display: 'Condition to be updated' }],
-          text: 'Condition to be updated' 
+          text: 'Condition to be updated',
         },
         clinicalStatus: { coding: [ConditionClinicalStatusCodes.ACTIVE] },
-        onsetString: "Original onset"
+        onsetString: 'Original onset',
       });
       conditionToUpdate = result as Condition;
       if (conditionToUpdate.id) {
@@ -190,7 +189,7 @@ describe('Condition Utils Integration Tests', () => {
         id: conditionToUpdate.id as string,
         clinicalStatus: { coding: [ConditionClinicalStatusCodes.INACTIVE] },
       };
-      
+
       const result = await updateCondition(args);
       expect(result.resourceType).toBe('Condition');
       const updated = result as Condition;
@@ -198,11 +197,11 @@ describe('Condition Utils Integration Tests', () => {
       expect(updated.clinicalStatus?.coding?.[0]?.code).toBe('inactive');
       expect(updated.code?.text).toBe('Condition to be updated'); // Ensure other fields are preserved
     });
-    
+
     test('should remove a field when updated with null', async () => {
       const args: UpdateConditionArgs = {
         id: conditionToUpdate.id as string,
-        onsetString: null
+        onsetString: null,
       };
 
       const result = await updateCondition(args);
@@ -223,15 +222,28 @@ describe('Condition Utils Integration Tests', () => {
 
       // Create a set of conditions for searching
       const conditionsToCreate = [
-        { subject: { reference: `Patient/${testPatient.id}` }, code: { coding: [{ system: 'test', code: 'C-1' }], text: 'Active Test Condition' }, clinicalStatus: { coding: [ConditionClinicalStatusCodes.ACTIVE] } },
-        { subject: { reference: `Patient/${testPatient.id}` }, code: { coding: [{ system: 'test', code: 'C-2' }], text: 'Inactive Test Condition' }, clinicalStatus: { coding: [ConditionClinicalStatusCodes.INACTIVE] } },
-        { subject: { reference: `Patient/${testPatient.id}` }, code: { coding: [{ system: 'test', code: 'C-3' }], text: 'Resolved Encounter Diagnosis' }, clinicalStatus: { coding: [ConditionClinicalStatusCodes.RESOLVED] }, category: [{ coding: [{ code: 'encounter-diagnosis' }]}] },
+        {
+          subject: { reference: `Patient/${testPatient.id}` },
+          code: { coding: [{ system: 'test', code: 'C-1' }], text: 'Active Test Condition' },
+          clinicalStatus: { coding: [ConditionClinicalStatusCodes.ACTIVE] },
+        },
+        {
+          subject: { reference: `Patient/${testPatient.id}` },
+          code: { coding: [{ system: 'test', code: 'C-2' }], text: 'Inactive Test Condition' },
+          clinicalStatus: { coding: [ConditionClinicalStatusCodes.INACTIVE] },
+        },
+        {
+          subject: { reference: `Patient/${testPatient.id}` },
+          code: { coding: [{ system: 'test', code: 'C-3' }], text: 'Resolved Encounter Diagnosis' },
+          clinicalStatus: { coding: [ConditionClinicalStatusCodes.RESOLVED] },
+          category: [{ coding: [{ code: 'encounter-diagnosis' }] }],
+        },
       ];
 
       for (const c of conditionsToCreate) {
         const result = await createCondition(c);
-        if(result.resourceType === 'Condition' && result.id) {
-            createdConditionIds.push(result.id);
+        if (result.resourceType === 'Condition' && result.id) {
+          createdConditionIds.push(result.id);
         }
       }
     });
@@ -241,7 +253,7 @@ describe('Condition Utils Integration Tests', () => {
       expect(result).toBeInstanceOf(Array);
       const conditions = result as Condition[];
       expect(conditions.length).toBeGreaterThanOrEqual(3);
-      expect(conditions.every(c => c.subject?.reference === `Patient/${testPatient.id}`)).toBe(true);
+      expect(conditions.every((c) => c.subject?.reference === `Patient/${testPatient.id}`)).toBe(true);
     });
 
     test('should find conditions by clinical-status', async () => {
@@ -252,7 +264,7 @@ describe('Condition Utils Integration Tests', () => {
       expect(conditions[0].clinicalStatus?.coding?.[0]?.code).toBe('inactive');
       expect(conditions[0].code?.coding?.[0]?.code).toBe('C-2');
     });
-    
+
     test('should find conditions by code', async () => {
       const result = await searchConditions({ subject: testPatient.id, code: 'test|C-1' });
       expect(result).toBeInstanceOf(Array);
@@ -262,27 +274,27 @@ describe('Condition Utils Integration Tests', () => {
     });
 
     test('should find conditions by category', async () => {
-        const result = await searchConditions({ subject: testPatient.id, category: 'encounter-diagnosis' });
-        expect(result).toBeInstanceOf(Array);
-        const conditions = result as Condition[];
-        expect(conditions.length).toBe(1);
-        expect(conditions[0].code?.coding?.[0]?.code).toBe('C-3');
+      const result = await searchConditions({ subject: testPatient.id, category: 'encounter-diagnosis' });
+      expect(result).toBeInstanceOf(Array);
+      const conditions = result as Condition[];
+      expect(conditions.length).toBe(1);
+      expect(conditions[0].code?.coding?.[0]?.code).toBe('C-3');
     });
-    
+
     test('should return an empty array for non-matching criteria', async () => {
-        const result = await searchConditions({ subject: testPatient.id as string, code: 'non-existent' });
-        expect(result).toBeInstanceOf(Array);
-        expect((result as Condition[]).length).toBe(0);
+      const result = await searchConditions({ subject: testPatient.id as string, code: 'non-existent' });
+      expect(result).toBeInstanceOf(Array);
+      expect((result as Condition[]).length).toBe(0);
     });
-    
+
     test('should return OperationOutcome if no criteria provided', async () => {
-        const result = await searchConditions({});
-        expect(result).not.toBeInstanceOf(Array);
-        if (!Array.isArray(result)) {
-            expect(result.resourceType).toBe('OperationOutcome');
-        } else {
-            fail('Expected OperationOutcome but received an array of conditions.');
-        }
+      const result = await searchConditions({});
+      expect(result).not.toBeInstanceOf(Array);
+      if (!Array.isArray(result)) {
+        expect(result.resourceType).toBe('OperationOutcome');
+      } else {
+        fail('Expected OperationOutcome but received an array of conditions.');
+      }
     });
   });
-}); 
+});

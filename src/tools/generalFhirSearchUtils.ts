@@ -52,10 +52,10 @@ export async function generalFhirSearch(
         if (Array.isArray(value)) {
           // For _id, comma-separate: field=_id=v1,v2,v3
           if (key === '_id') {
-            return `${encodeURIComponent(key)}=${value.map(v => String(v)).join(',')}`;
+            return `${encodeURIComponent(key)}=${value.map((v) => String(v)).join(',')}`;
           }
           // For other array values, create multiple parameters: key=v1&key=v2
-          return value.map(v => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`).join('&');
+          return value.map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`).join('&');
         }
         return `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
       })
@@ -65,14 +65,14 @@ export async function generalFhirSearch(
 
     // Medplum SDK's search method can take ResourceType or a string for the resource type.
     // The result is a Bundle of the specified Resource type.
-    const result = (await medplumClient.search(args.resourceType as ResourceType, queryString)) as Bundle<Resource>; 
-    
+    const result = (await medplumClient.search(args.resourceType as ResourceType, queryString)) as Bundle<Resource>;
+
     console.log(`General FHIR search found ${result.entry?.length || 0} resources.`);
     return result;
-
   } catch (error: any) {
     console.error(`Error during general FHIR search for type "${args.resourceType}":`, error);
-    if (error.outcome) { // Prefer the outcome from the error if available
+    if (error.outcome) {
+      // Prefer the outcome from the error if available
       return error.outcome as OperationOutcome;
     }
     // Fallback to a generic OperationOutcome
@@ -87,4 +87,4 @@ export async function generalFhirSearch(
       ],
     };
   }
-} 
+}
