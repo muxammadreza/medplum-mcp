@@ -69,7 +69,6 @@ This plan outlines the steps to build a Model Context Protocol (MCP) server for 
 For each resource, we need tools for `create`, `readById`, `update`, and `search`. Each tool should be a well-defined function in `src/tools/`.
 
 - [x] **Patient Tools (`src/tools/patientUtils.ts`)**
-
   - Description: Tools for managing Patient resources.
   - [x] **`createPatient(patientDetails: CreatePatientArgs)`**: Creates a new patient.
     - SDK: `medplum.createResource<Patient>(patientResource)`
@@ -90,7 +89,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Jest integration tests created and passing (`tests/integration/patient.integration.test.ts`).
 
 - [x] **Practitioner Tools (`src/tools/practitionerUtils.ts`)**
-
   - Description: Tools for managing Practitioner resources.
   - [x] **`searchPractitionersByName(nameArgs: PractitionerNameSearchParams)`**
     - SDK: `medplum.searchResources<Practitioner>('Practitioner', searchCriteria)`
@@ -111,7 +109,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Jest integration tests created and passing (`tests/integration/practitioner.integration.test.ts`).
 
 - [x] **Tool: `manageOrganization`**
-
   - Description: Handles Organization resources (e.g., hospitals, clinics).
   - Sub-actions:
     - [x] `createOrganization(args: CreateOrganizationArgs)`
@@ -124,7 +121,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Jest integration tests created and passing (`tests/integration/organization.integration.test.ts`).
 
 - [x] **Tool: `manageEncounter`**
-
   - Description: Handles Encounter resources (e.g., doctor visits, hospital stays).
   - Sub-actions:
     - [x] `createEncounter(details: CreateEncounterArgs)`: Links to Patient, Practitioner(s), Organization.
@@ -134,7 +130,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
   - Notes: Encounters are central to tracking patient interactions. `status`, `class`, `type`, `subject`, `participant`, `serviceProvider` are key. Implemented with corresponding utils, schemas, test harness updates, and integration tests (`tests/integration/encounter.integration.test.ts`).
 
 - [x] **Tool: `manageObservation`**
-
   - Description: Handles Observation resources (e.g., lab results, vital signs, X-ray findings).
   - Sub-actions:
     - `createObservation(details: CreateObservationArgs)`: Links to Encounter, Patient.
@@ -144,7 +139,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
   - Notes: `code` (LOINC, SNOMED CT), `value[x]`, `subject`, `encounter` are key fields. "Sed test" would map to a specific LOINC code. "X-ray" also.
 
 - [x] **Tool: `manageMedicationRequest`**
-
   - Description: Handles MedicationRequest resources (prescriptions).
   - Sub-actions:
     - `createMedicationRequest(details: MedicationRequest)`: Links to Patient, Practitioner, Medication.
@@ -154,7 +148,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
   - Notes: Differentiate between MedicationRequest and Medication (the actual drug).
 
 - [x] **Tool: `manageMedication`**
-
   - Description: Handles Medication resources (details about a specific drug).
   - Sub-actions:
     - [x] `createMedication(details: CreateMedicationArgs)` (less common, often Medications are pre-loaded or referenced)
@@ -166,7 +159,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Integration tests in `tests/integration/medication.integration.test.ts` passed.
 
 - [x] **Tool: `manageEpisodeOfCare`**
-
   - Description: Handles EpisodeOfCare resources to group related encounters and conditions.
   - Sub-actions:
     - [x] `createEpisodeOfCare(details: CreateEpisodeOfCareArgs)`: Links to Patient, managingOrganization.
@@ -179,7 +171,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Integration tests in `tests/integration/episodeOfCare.integration.test.ts` passed.
 
 - [x] **Tool: `manageCondition`**
-
   - Description: Handles Condition resources (diagnoses, problems, health concerns, clinical findings).
   - Sub-actions:
     - [x] `createCondition(details: CreateConditionArgs)`: Creates new diagnosis/condition for a patient.
@@ -196,7 +187,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Fully integrated into MCP server with argument transformation logic.
 
 - [ ] **Tool: `manageDiagnosticReport`**
-
   - Description: Handles DiagnosticReport resources (findings and interpretations of diagnostic tests).
   - Sub-actions:
     - `createDiagnosticReport(details: CreateDiagnosticReportArgs)`: Creates new diagnostic report with findings.
@@ -209,7 +199,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
     - Critical for clinical interpretation and medical decision-making
 
 - [ ] **Tool: `manageProcedure`**
-
   - Description: Handles Procedure resources (actions performed on patients).
   - Sub-actions:
     - `createProcedure(details: CreateProcedureArgs)`: Records new procedure performed on patient.
@@ -237,7 +226,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 - [x] **Install MCP SDK Dependencies** — Add the official MCP TypeScript SDK and remove OpenAI-specific dependencies
 
   **Notes:**
-
   - Installed `@modelcontextprotocol/sdk` version 1.0.0
   - Added `zod` for schema validation (required by MCP SDK)
   - Removed `openai` dependency
@@ -248,7 +236,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 - [x] **Create MCP Server Infrastructure** — Build the core MCP server using the official SDK pattern with stdio transport
 
   **Notes:**
-
   - Created MCP server with stdio transport using official SDK
   - Implemented basic tool list handler and tool execution handler
   - Set up proper MCP protocol initialization and response handling
@@ -261,7 +248,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 - [x] **Convert Tool Schemas from OpenAI to MCP Format** — Transform existing tool schemas in toolSchemas.ts to MCP-compatible format
 
   **Notes:**
-
   - Converted all 22 FHIR tools from OpenAI function calling format to MCP inputSchema format
   - Added comprehensive tool schemas for Patient, Practitioner, Organization, Encounter, Observation, and GeneralFhirSearch tools
   - All tools now properly registered with MCP server and returning correct tool counts
@@ -272,22 +258,18 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 ## Phase 4: LLM Interaction & Orchestration
 
 - [x] **Define Tool Schema for LLM**
-
   - Notes: JSON schemas defined in `src/tools/toolSchemas.ts` for all implemented Patient and Practitioner tools. Iteratively refined based on LLM performance (e.g., `searchPatients` uses direct parameters).
 
 - [x] **LLM Request Handling in MCP (via Chat Harness)**
-
   - Notes: `src/llm-test-harness.ts` serves as the current entry point. It processes natural language queries, invokes the LLM with tool schemas, and executes the chosen tool by calling the corresponding TypeScript function.
   - It parses the LLM's tool call, validates (implicitly by checking tool name in `availableTools` map), calls the MCP server tool, and logs the result.
 
 - [ ] **Natural Language to Tool Parameter Mapping Strategy**
-
   - Notes: This is largely an LLM task (using the tool schemas), but the MCP tool design should facilitate this.
   - The LLM needs to extract entities like "Dr. Stevens", "PCP", "x-ray", "sed test", "steroids", "rheumatologist" and map them to the correct parameters for the MCP tools.
   - For "PCP", the LLM might first call `searchPractitioners` with name "Stevens" and then the application logic (or LLM itself) might need to confirm if this is the PCP, potentially by checking `Encounter` history or `EpisodeOfCare.careManager`.
 
 - [ ] **Clarifying Questions Logic (MCP Server Support)**
-
   - Notes: If the LLM cannot fill all required parameters for a tool, or if there's ambiguity, it needs to ask the user.
   - The MCP server might need to support this by:
     - Tools returning information that helps the LLM formulate a question (e.g., if a search returns multiple practitioners).
@@ -306,14 +288,12 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 ## Phase 5: Advanced Features & Production Readiness
 
 - [ ] **Implement Advanced Features**
-
   - Notes:
     - Add new tools or enhance existing ones
     - Implement advanced features like multi-step workflows, conditional logic, and complex decision-making
     - Ensure compatibility with existing tools and integration points
 
 - [ ] **Production Readiness**
-
   - Notes:
     - Perform thorough testing and validation
     - Ensure stability and reliability
@@ -322,7 +302,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 - [x] **Test with MCP Inspector** — Verify the server works correctly using the official MCP Inspector before testing with actual clients
 
   **Notes:**
-
   - Successfully launched MCP Inspector with our server using `npx @modelcontextprotocol/inspector node dist/index.js`
   - Inspector is accessible at http://localhost:6274 for visual testing and debugging
   - Can test all 22 FHIR tools through the Inspector's web interface
@@ -333,7 +312,6 @@ For each resource, we need tools for `create`, `readById`, `update`, and `search
 - [x] **Interactive Chat Harness** — Build a comprehensive chat interface for testing the MCP server
 
   **Notes:**
-
   - Created a full MCP client chat harness in `src/llm-test-harness.ts`
   - Integrates OpenAI GPT-4o for natural language processing
   - Automatically discovers and uses all 22 MCP tools

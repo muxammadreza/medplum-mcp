@@ -134,7 +134,7 @@ export async function getEpisodeOfCareById(
     if (!episodeOfCareId) {
       throw new Error('EpisodeOfCare ID is required.');
     }
-    const result = (await medplumClient.readResource('EpisodeOfCare', episodeOfCareId)) as EpisodeOfCare | null;
+    const result = await medplumClient.readResource('EpisodeOfCare', episodeOfCareId);
     // console.log(result ? 'EpisodeOfCare retrieved:' : 'EpisodeOfCare not found:', episodeOfCareId);
     return result;
   } catch (error: any) {

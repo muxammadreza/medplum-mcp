@@ -221,7 +221,7 @@ describe('Encounter Tool Integration Tests', () => {
       expect(encounterToUpdate).toBeDefined();
       expect(encounterToUpdate!.id).toBeDefined();
       // @ts-ignore: Testing invalid input purposefully
-      await expect(updateEncounter(encounterToUpdate!.id!, null)).rejects.toThrow(
+      await expect(updateEncounter(encounterToUpdate!.id, null)).rejects.toThrow(
         'Updates object cannot be empty for updating an encounter.',
       );
       await expect(updateEncounter(encounterToUpdate!.id!, {})).rejects.toThrow(

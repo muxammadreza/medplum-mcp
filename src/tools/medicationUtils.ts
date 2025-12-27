@@ -88,7 +88,7 @@ export async function getMedicationById(
     if (!medicationId) {
       throw new Error('Medication ID is required.');
     }
-    const medication = (await medplumClient.readResource('Medication', medicationId)) as Medication | null;
+    const medication = await medplumClient.readResource('Medication', medicationId);
     // console.log('Medication retrieved:', medication);
     return medication;
   } catch (error: any) {

@@ -5,8 +5,8 @@ import {
   Reference,
   AccessPolicy,
   Project,
-  InviteRequest,
 } from '@medplum/fhirtypes';
+import { InviteRequest } from '@medplum/core';
 
 export interface InviteUserArgs {
   projectId: string;

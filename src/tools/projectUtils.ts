@@ -1,6 +1,6 @@
 import { medplum } from '../config/medplumClient';
 
-export async function listProjects(): Promise<any> {
+export function listProjects(): any {
   const logins = medplum.getLogins();
   return logins.map((login) => ({
     projectId: login.project.reference?.split('/')[1],

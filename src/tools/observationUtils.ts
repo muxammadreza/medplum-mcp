@@ -303,8 +303,11 @@ export async function updateObservation(observationId: string, updates: UpdateOb
   let valueKeyPresentInUpdates: keyof Observation | undefined;
   for (const key of valueFields) {
     // Check if the key exists in the original updates object (including restOfUpdates)
-    if (Object.prototype.hasOwnProperty.call(restOfUpdates, key) && restOfUpdates[key as keyof UpdateObservationArgs] !== undefined) {
-       valueKeyPresentInUpdates = key;
+    if (
+      Object.prototype.hasOwnProperty.call(restOfUpdates, key) &&
+      (restOfUpdates as any)[key] !== undefined
+    ) {
+      valueKeyPresentInUpdates = key;
     }
   }
 
@@ -312,11 +315,11 @@ export async function updateObservation(observationId: string, updates: UpdateOb
     for (const key of valueFields) {
       if (key !== valueKeyPresentInUpdates) {
         // Explicitly set to undefined to remove
-         // We need to be careful with type safety here.
-         // Since workingUpdates is Partial<Observation>, we can set keys to undefined.
-         // However, TS doesn't like dynamic key access on the generic type easily without casting or strict checks.
-         // Since we know 'key' is a valid key of Observation, we can use a type assertion that is safe.
-         (workingUpdates as Record<keyof Observation, unknown>)[key] = undefined;
+        // We need to be careful with type safety here.
+        // Since workingUpdates is Partial<Observation>, we can set keys to undefined.
+        // However, TS doesn't like dynamic key access on the generic type easily without casting or strict checks.
+        // Since we know 'key' is a valid key of Observation, we can use a type assertion that is safe.
+        (workingUpdates as Record<keyof Observation, unknown>)[key] = undefined;
       }
     }
   }

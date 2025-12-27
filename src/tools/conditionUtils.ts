@@ -199,7 +199,7 @@ export async function getConditionById(
     if (!conditionId) {
       throw new Error('Condition ID is required.');
     }
-    const condition = (await medplumClient.readResource('Condition', conditionId)) as Condition | null;
+    const condition = await medplumClient.readResource('Condition', conditionId);
     if (condition) {
       // console.log('Condition retrieved:', condition.id);
     }

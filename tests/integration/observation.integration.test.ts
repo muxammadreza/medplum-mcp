@@ -277,7 +277,7 @@ describe('Observation Tool Integration Tests', () => {
     it('should throw an error if updates object is empty', async () => {
       expect(obsToUpdate?.id).toBeDefined();
       // @ts-ignore: Testing invalid input
-      await expect(updateObservation(obsToUpdate!.id!, {})).rejects.toThrow('Updates object cannot be empty');
+      await expect(updateObservation(obsToUpdate!.id, {})).rejects.toThrow('Updates object cannot be empty');
     });
   });
 
