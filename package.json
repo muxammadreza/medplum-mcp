@@ -31,6 +31,7 @@
   "license": "MIT",
   "description": "MCP server for Medplum FHIR operations",
   "dependencies": {
+    "@medplum/cli": "^5.0.10",
     "@medplum/core": "^4.1.6",
     "@medplum/fhirtypes": "^4.1.6",
     "@modelcontextprotocol/sdk": "^1.0.0",

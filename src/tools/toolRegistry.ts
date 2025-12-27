@@ -32,6 +32,11 @@ import * as advancedUtils from './advancedUtils';
 import * as dataUtils from './dataUtils';
 import * as versionUtils from './versionUtils';
 import * as miscUtils from './miscUtils';
+import * as projectUtils from './projectUtils';
+import * as instanceUtils from './instanceUtils';
+import * as adminActionUtils from './adminActionUtils';
+import * as bulkUtils from './bulkUtils';
+import * as fhircastUtils from './fhircastUtils';
 
 // Map of resource type to specific utils
 const specificUtils: Record<string, any> = {
@@ -585,6 +590,107 @@ toolDefinitions.push({
   },
 });
 toolMapping['fhircastPublish'] = miscUtils.fhircastPublish;
+
+// Register Project Utils
+toolDefinitions.push({
+  name: 'listProjects',
+  description: 'Lists all projects accessible to the current user.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['listProjects'] = projectUtils.listProjects;
+
+toolDefinitions.push({
+  name: 'switchProject',
+  description: 'Switches the active project context.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      projectId: { type: 'string' },
+    },
+    required: ['projectId'],
+  },
+});
+toolMapping['switchProject'] = projectUtils.switchProject;
+
+// Register Instance Utils
+toolDefinitions.push({
+  name: 'getHealthCheck',
+  description: 'Performs a health check on the Medplum server.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['getHealthCheck'] = instanceUtils.getHealthCheck;
+
+// Register Admin Action Utils
+toolDefinitions.push({
+  name: 'sendEmail',
+  description: 'Sends an email using the Medplum Email API.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      to: { type: 'string' },
+      subject: { type: 'string' },
+      text: { type: 'string' },
+      html: { type: 'string' },
+    },
+    required: ['to', 'subject'],
+  },
+});
+toolMapping['sendEmail'] = adminActionUtils.sendEmail;
+
+// Register Bulk Utils
+toolDefinitions.push({
+  name: 'bulkImport',
+  description: 'Starts a bulk import job using the $import operation.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      url: { type: 'string', description: 'The URL of the FHIR NDJSON file to import.' },
+    },
+    required: ['url'],
+  },
+});
+toolMapping['bulkImport'] = bulkUtils.bulkImport;
+
+// Register FHIRcast Utils
+toolDefinitions.push({
+  name: 'fhircastSubscribe',
+  description: 'Subscribes to a FHIRcast topic.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      topic: { type: 'string' },
+      events: { type: 'array', items: { type: 'string' } },
+    },
+    required: ['topic', 'events'],
+  },
+});
+toolMapping['fhircastSubscribe'] = fhircastUtils.fhircastSubscribe;
+
+toolDefinitions.push({
+  name: 'fhircastUnsubscribe',
+  description: 'Unsubscribes from a FHIRcast topic.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      subscriptionRequest: { type: 'object' },
+    },
+    required: ['subscriptionRequest'],
+  },
+});
+toolMapping['fhircastUnsubscribe'] = fhircastUtils.fhircastUnsubscribe;
+
+toolDefinitions.push({
+  name: 'fhircastGetContext',
+  description: 'Gets the current context of a FHIRcast topic.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      topic: { type: 'string' },
+    },
+    required: ['topic'],
+  },
+});
+toolMapping['fhircastGetContext'] = fhircastUtils.fhircastGetContext;
 
 // 1. Add Specific Tools first
 const specificToolNames = new Set(specificToolDefinitions.map((t) => t.name));

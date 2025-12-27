@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "medplum": {
-      "command": "npx",
-      "args": ["medplum-mcp-server"],
+      "command": "node",
+      "args": ["dist/src/index.js"],
       "env": {
         "MEDPLUM_BASE_URL": "https://api.medplum.com",
         "MEDPLUM_CLIENT_ID": "YOUR_CLIENT_ID",
