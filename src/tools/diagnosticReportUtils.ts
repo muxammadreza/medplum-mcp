@@ -130,7 +130,9 @@ export async function updateDiagnosticReport(
     resourceType: 'DiagnosticReport',
   };
 
-  if (subjectId) {
+  if (subjectId === null) {
+    (updated as any).subject = undefined;
+  } else if (subjectId) {
     updated.subject = { reference: `Patient/${subjectId}` };
   }
 

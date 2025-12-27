@@ -1302,25 +1302,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         const { patientId, practitionerId, organizationId, encounterId, observationId, medicationRequestId, medicationId, episodeOfCareId, conditionId, diagnosticReportId, procedureId, ...updates } = args;
         const id = patientId || practitionerId || organizationId || encounterId || observationId || medicationRequestId || medicationId || episodeOfCareId || conditionId || diagnosticReportId || procedureId;
         
-                 // Special handling for updateCondition
-         if (toolName === 'updateCondition') {
-           const updateArgs: any = { id };
-           if ((updates as any).clinicalStatus) {
-             const key = ((updates as any).clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
-             updateArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
-           }
-           if ((updates as any).verificationStatus) {
-             const verStatusMap: { [key: string]: string } = { 'entered-in-error': 'ENTERED-IN-ERROR' };
-             const key = (verStatusMap[(updates as any).verificationStatus] || ((updates as any).verificationStatus as string).toUpperCase()) as keyof typeof ConditionVerificationStatusCodes;
-             updateArgs.verificationStatus = { coding: [ConditionVerificationStatusCodes[key]] };
-           }
-           if ((updates as any).onsetString !== undefined) {
-             updateArgs.onsetString = (updates as any).onsetString;
-           }
-           result = await toolFunction(updateArgs);
-         } else {
-           result = await toolFunction(id, updates);
-         }
+        // Special handling for updateCondition
+        if (toolName === 'updateCondition') {
+          const updateArgs: any = { id };
+          if ((updates as any).clinicalStatus) {
+            const key = ((updates as any).clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
+            updateArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
+          }
+          if ((updates as any).verificationStatus) {
+            const verStatusMap: { [key: string]: string } = { 'entered-in-error': 'ENTERED-IN-ERROR' };
+            const key = (verStatusMap[(updates as any).verificationStatus] || ((updates as any).verificationStatus as string).toUpperCase()) as keyof typeof ConditionVerificationStatusCodes;
+            updateArgs.verificationStatus = { coding: [ConditionVerificationStatusCodes[key]] };
+          }
+          if ((updates as any).onsetString !== undefined) {
+            updateArgs.onsetString = (updates as any).onsetString;
+          }
+          result = await toolFunction(updateArgs);
+        } else {
+          result = await toolFunction(id, updates);
+        }
        } else if (toolName === 'createCondition') {
          // Special handling for createCondition
          const { patientId, code, clinicalStatus, onsetString, recordedDate } = args;

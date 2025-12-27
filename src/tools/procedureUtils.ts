@@ -117,7 +117,9 @@ export async function updateProcedure(
     resourceType: 'Procedure',
   };
 
-  if (subjectId) {
+  if (subjectId === null) {
+    (updated as any).subject = undefined;
+  } else if (subjectId) {
     updated.subject = { reference: `Patient/${subjectId}` };
   }
 
