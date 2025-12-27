@@ -56,7 +56,7 @@ export const toolMapping: Record<string, (...args: any[]) => Promise<any>> = {};
 
 // Register General FHIR Search Tool
 toolDefinitions.push({
-  name: 'generalFhirSearch',
+  name: 'searchResource',
   description: 'Performs a generic FHIR search operation on any resource type with custom query parameters.',
   inputSchema: {
     type: 'object',
@@ -82,7 +82,7 @@ toolDefinitions.push({
     required: ['resourceType', 'queryParams'],
   },
 });
-toolMapping['generalFhirSearch'] = generalFhirSearchUtils.generalFhirSearch;
+toolMapping['searchResource'] = generalFhirSearchUtils.generalFhirSearch;
 
 // Register Transaction Tool
 toolDefinitions.push({
@@ -796,132 +796,100 @@ for (const def of specificToolDefinitions) {
   }
 }
 
-// 2. Add Generic Tools for everything else
-for (const resourceType of resourceTypes) {
-  // 1. Create
-  const createToolName = `create${resourceType}`;
-  if (!specificToolNames.has(createToolName)) {
-    toolDefinitions.push({
-      name: createToolName,
-      description: `Creates a new ${resourceType} resource.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          resource: {
-            type: 'object',
-            description: `The ${resourceType} resource data to create.`,
-            additionalProperties: true,
-          },
-        },
-        required: ['resource'],
-      },
-    });
-    toolMapping[createToolName] = (args: any) => GenericResourceTool.create(resourceType, args.resource || args);
-  }
+// 2. Add Generic Tools (Consolidated)
+// Instead of generating 800+ tools, we expose generic operations.
 
-  // 2. GetById
-  const getToolName = `get${resourceType}ById`;
-  if (!specificToolNames.has(getToolName)) {
-    toolDefinitions.push({
-      name: getToolName,
-      description: `Retrieves a ${resourceType} resource by its unique ID.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-            description: `The unique ID of the ${resourceType} to retrieve.`,
-          },
-        },
-        required: ['id'],
+// createResource
+toolDefinitions.push({
+  name: 'createResource',
+  description: 'Creates a new FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to create (e.g., Patient, Observation).',
       },
-    });
-    toolMapping[getToolName] = (args: any) => {
-      const id =
-        typeof args === 'string'
-          ? args
-          : args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-      return GenericResourceTool.getById(resourceType, id);
-    };
-  }
-
-  // 3. Update
-  const updateToolName = `update${resourceType}`;
-  if (!specificToolNames.has(updateToolName)) {
-    toolDefinitions.push({
-      name: updateToolName,
-      description: `Updates an existing ${resourceType} resource.`,
-      inputSchema: {
+      resource: {
         type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-            description: `The unique ID of the ${resourceType} to update.`,
-          },
-          updates: {
-            type: 'object',
-            description: 'The fields to update.',
-            additionalProperties: true,
-          },
-        },
-        required: ['id', 'updates'],
-      },
-    });
-    toolMapping[updateToolName] = (args: any) => {
-      const id = args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-      const updates =
-        args.updates ||
-        (() => {
-          const { id: _, ...rest } = args;
-          return rest;
-        })();
-      return GenericResourceTool.update(resourceType, id, updates);
-    };
-  }
-
-  // 4. Delete
-  const deleteToolName = `delete${resourceType}`;
-  // No specific tools have delete implemented in current repo, so we add it for all
-  toolDefinitions.push({
-    name: deleteToolName,
-    description: `Deletes a ${resourceType} resource.`,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: {
-          type: 'string',
-          description: `The unique ID of the ${resourceType} to delete.`,
-        },
-      },
-      required: ['id'],
-    },
-  });
-  toolMapping[deleteToolName] = (args: any) => {
-    const id =
-      typeof args === 'string'
-        ? args
-        : args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-    return GenericResourceTool.delete(resourceType, id);
-  };
-
-  // 5. Search
-  const searchToolName = `search${resourceType}s`;
-  if (!specificToolNames.has(searchToolName)) {
-    toolDefinitions.push({
-      name: searchToolName,
-      description: `Searches for ${resourceType} resources.`,
-      inputSchema: {
-        type: 'object',
-        description: 'Search parameters',
+        description: 'The resource data.',
         additionalProperties: true,
       },
-    });
-    toolMapping[searchToolName] = (args: any) => GenericResourceTool.search(resourceType, args);
-  }
-}
+    },
+    required: ['resourceType', 'resource'],
+  },
+});
+toolMapping['createResource'] = (args: any) => GenericResourceTool.create(args.resourceType, args.resource);
 
-// 6. Patch
-// Adding generic Patch tool
+// getResource
+toolDefinitions.push({
+  name: 'getResource',
+  description: 'Retrieves a FHIR resource by its ID.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to retrieve.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['getResource'] = (args: any) => GenericResourceTool.getById(args.resourceType, args.id);
+
+// updateResource
+toolDefinitions.push({
+  name: 'updateResource',
+  description: 'Updates an existing FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to update.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+      updates: {
+        type: 'object',
+        description: 'The fields to update.',
+        additionalProperties: true,
+      },
+    },
+    required: ['resourceType', 'id', 'updates'],
+  },
+});
+toolMapping['updateResource'] = (args: any) => GenericResourceTool.update(args.resourceType, args.id, args.updates);
+
+// deleteResource
+toolDefinitions.push({
+  name: 'deleteResource',
+  description: 'Deletes a FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to delete.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['deleteResource'] = (args: any) => GenericResourceTool.delete(args.resourceType, args.id);
+
+// patchResource
 toolDefinitions.push({
   name: 'patchResource',
   description: 'Patches a resource.',
