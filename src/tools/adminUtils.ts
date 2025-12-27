@@ -1,5 +1,12 @@
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
-import { OperationOutcome, ProjectMembership, Reference, AccessPolicy, Project } from '@medplum/fhirtypes';
+import {
+  OperationOutcome,
+  ProjectMembership,
+  Reference,
+  AccessPolicy,
+  Project,
+  InviteRequest,
+} from '@medplum/fhirtypes';
 
 export interface InviteUserArgs {
   projectId: string;
@@ -15,18 +22,15 @@ export interface InviteUserArgs {
 export async function inviteUser(args: InviteUserArgs): Promise<ProjectMembership | OperationOutcome> {
   await ensureAuthenticated();
 
-  const body: any = {
+  const body: InviteRequest = {
     resourceType: args.resourceType || 'Practitioner',
     email: args.email,
     accessPolicy: args.accessPolicy,
     firstName: args.firstName || '',
     lastName: args.lastName || '',
     sendEmail: args.sendEmail !== false, // Default to true
+    admin: args.admin,
   };
-
-  if (args.admin) {
-    body.membership = { admin: true };
-  }
 
   return medplum.invite(args.projectId, body);
 }
@@ -49,7 +53,7 @@ export async function addProjectSecret(args: AddProjectSecretArgs): Promise<Proj
 
   // Check if secret exists and update, or push new
   const secrets = project.secret || [];
-  const existingIndex = secrets.findIndex((s: any) => s.name === args.name);
+  const existingIndex = secrets.findIndex((s) => s.name === args.name);
 
   if (existingIndex >= 0) {
     secrets[existingIndex].valueString = args.value;

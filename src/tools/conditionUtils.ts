@@ -122,6 +122,7 @@ export interface ConditionSearchArgs {
 /**
  * Creates a new Condition resource.
  * @param args The arguments for creating the condition.
+ * @param client Optional MedplumClient to use.
  * @returns The created Condition resource or an OperationOutcome in case of an error.
  */
 export async function createCondition(
@@ -160,7 +161,7 @@ export async function createCondition(
     );
 
     const createdCondition = (await medplumClient.createResource(conditionResource)) as Condition;
-    console.log('Condition created successfully:', createdCondition.id);
+    // console.log('Condition created successfully:', createdCondition.id);
     return createdCondition;
   } catch (error: any) {
     console.error('Error creating Condition:', error);
@@ -185,6 +186,7 @@ export async function createCondition(
 /**
  * Retrieves a Condition resource by its ID.
  * @param conditionId The ID of the Condition to retrieve.
+ * @param client Optional MedplumClient to use.
  * @returns The Condition resource or null if not found, or an OperationOutcome on error.
  */
 export async function getConditionById(
@@ -199,12 +201,12 @@ export async function getConditionById(
     }
     const condition = (await medplumClient.readResource('Condition', conditionId)) as Condition | null;
     if (condition) {
-      console.log('Condition retrieved:', condition.id);
+      // console.log('Condition retrieved:', condition.id);
     }
     return condition;
   } catch (error: any) {
     if (error.outcome && error.outcome.issue && error.outcome.issue[0]?.code === 'not-found') {
-      console.log(`Condition with ID "${conditionId}" not found.`);
+      // console.log(`Condition with ID "${conditionId}" not found.`);
       return null;
     }
     console.error(`Error retrieving Condition with ID "${conditionId}":`, error);
@@ -229,6 +231,7 @@ export async function getConditionById(
 /**
  * Updates an existing Condition resource.
  * @param args The arguments for updating the condition.
+ * @param client Optional MedplumClient to use.
  * @returns The updated Condition resource or an OperationOutcome on error.
  */
 export async function updateCondition(
@@ -255,7 +258,7 @@ export async function updateCondition(
     if (updates.recordedDate === null) delete updatedResource.recordedDate;
 
     const result = (await medplumClient.updateResource(updatedResource)) as Condition;
-    console.log('Condition updated successfully:', result.id);
+    // console.log('Condition updated successfully:', result.id);
     return result;
   } catch (error: any) {
     console.error('Error updating Condition:', error);
@@ -280,6 +283,7 @@ export async function updateCondition(
 /**
  * Searches for Condition resources based on specified criteria.
  * @param args The search criteria.
+ * @param client Optional MedplumClient to use.
  * @returns An array of Condition resources matching the criteria or an OperationOutcome on error.
  */
 export async function searchConditions(
@@ -324,12 +328,12 @@ export async function searchConditions(
     }
 
     const query = searchCriteria.join('&');
-    console.log('Searching conditions with query:', query);
+    // console.log('Searching conditions with query:', query);
 
     const searchResult = await medplumClient.searchResources('Condition', query);
     const conditions = searchResult as Condition[];
 
-    console.log(`Found ${conditions.length} conditions.`);
+    // console.log(`Found ${conditions.length} conditions.`);
     return conditions;
   } catch (error: any) {
     console.error('Error searching Conditions:', error);

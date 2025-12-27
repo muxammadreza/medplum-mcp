@@ -1,9 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { GenericResourceTool } from './genericResourceTool';
 
 // Import new utils
@@ -22,9 +16,14 @@ import * as adminActionUtils from './adminActionUtils';
 import * as bulkUtils from './bulkUtils';
 import * as fhircastUtils from './fhircastUtils';
 import { generalFhirSearch } from './generalFhirSearchUtils';
+import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import * as schemas from './specificToolSchemas';
+import { Resource } from '@medplum/fhirtypes';
 
-export const toolDefinitions: any[] = [];
-export const toolMapping: Record<string, (...args: any[]) => Promise<any>> = {};
+export const toolDefinitions: Tool[] = [];
+// Use `unknown` instead of `any` for arguments and return types where applicable,
+// but since the tools return various things, `Promise<unknown>` is safer than `Promise<any>`.
+export const toolMapping: Record<string, (args: Record<string, unknown>) => Promise<unknown>> = {};
 
 // --- Generic Resource Tools (The Core 5) ---
 
@@ -47,7 +46,10 @@ toolDefinitions.push({
     required: ['resourceType', 'resource'],
   },
 });
-toolMapping['createResource'] = (args: any) => GenericResourceTool.create(args.resourceType, args.resource);
+toolMapping['createResource'] = (args) => {
+  const parsed = schemas.CreateResourceSchema.parse(args);
+  return GenericResourceTool.create(parsed.resourceType, parsed.resource as Resource);
+};
 
 toolDefinitions.push({
   name: 'getResource',
@@ -67,7 +69,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id'],
   },
 });
-toolMapping['getResource'] = (args: any) => GenericResourceTool.getById(args.resourceType, args.id);
+toolMapping['getResource'] = (args) => {
+  const parsed = schemas.GetResourceSchema.parse(args);
+  return GenericResourceTool.getById(parsed.resourceType, parsed.id);
+};
 
 toolDefinitions.push({
   name: 'updateResource',
@@ -92,7 +97,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id', 'updates'],
   },
 });
-toolMapping['updateResource'] = (args: any) => GenericResourceTool.update(args.resourceType, args.id, args.updates);
+toolMapping['updateResource'] = (args) => {
+  const parsed = schemas.UpdateResourceSchema.parse(args);
+  return GenericResourceTool.update(parsed.resourceType, parsed.id, parsed.updates as Partial<Resource>);
+};
 
 toolDefinitions.push({
   name: 'deleteResource',
@@ -112,7 +120,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id'],
   },
 });
-toolMapping['deleteResource'] = (args: any) => GenericResourceTool.delete(args.resourceType, args.id);
+toolMapping['deleteResource'] = (args) => {
+  const parsed = schemas.DeleteResourceSchema.parse(args);
+  return GenericResourceTool.delete(parsed.resourceType, parsed.id);
+};
 
 toolDefinitions.push({
   name: 'searchResource',
@@ -141,7 +152,13 @@ toolDefinitions.push({
     required: ['resourceType', 'queryParams'],
   },
 });
-toolMapping['searchResource'] = generalFhirSearch;
+toolMapping['searchResource'] = (args) => {
+  const parsed = schemas.SearchResourceSchema.parse(args);
+  return generalFhirSearch({
+    resourceType: parsed.resourceType,
+    queryParams: parsed.queryParams as Record<string, string | number | boolean | string[]>,
+  });
+};
 
 toolDefinitions.push({
   name: 'patchResource',
@@ -160,7 +177,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id', 'patch'],
   },
 });
-toolMapping['patchResource'] = (args: any) => GenericResourceTool.patch(args.resourceType, args.id, args.patch);
+toolMapping['patchResource'] = (args) => {
+  const parsed = schemas.PatchResourceSchema.parse(args);
+  return GenericResourceTool.patch(parsed.resourceType, parsed.id, parsed.patch as Record<string, unknown>[]);
+};
 
 // --- Consolidated Utility Tools ---
 
@@ -173,7 +193,8 @@ toolDefinitions.push({
     properties: {
       operation: {
         type: 'string',
-        description: 'The operation name (e.g., "validate-resource", "expand-valueset", "lookup-code", "validate-code").',
+        description:
+          'The operation name (e.g., "validate-resource", "expand-valueset", "lookup-code", "validate-code").',
         enum: ['validate-resource', 'expand-valueset', 'lookup-code', 'validate-code'],
       },
       parameters: {
@@ -185,19 +206,35 @@ toolDefinitions.push({
     required: ['operation', 'parameters'],
   },
 });
-toolMapping['executeFhirOperation'] = async (args: any) => {
-  const { operation, parameters } = args;
-  switch (operation) {
+toolMapping['executeFhirOperation'] = async (args) => {
+  const parsed = schemas.ExecuteFhirOperationSchema.parse(args);
+  const parameters = parsed.parameters as Record<string, unknown>;
+
+  switch (parsed.operation) {
     case 'validate-resource':
-      return await operationsUtils.validateResource({ resource: parameters.resource, resourceType: parameters.resourceType });
+      return await operationsUtils.validateResource({
+        resource: parameters.resource as Resource,
+        resourceType: parameters.resourceType as string,
+      });
     case 'expand-valueset':
-      return await operationsUtils.expandValueSet({ url: parameters.url, filter: parameters.filter });
+      return await operationsUtils.expandValueSet({
+        url: parameters.url as string,
+        filter: parameters.filter as string,
+      });
     case 'lookup-code':
-      return await operationsUtils.lookupCode({ system: parameters.system, code: parameters.code });
+      return await operationsUtils.lookupCode({
+        system: parameters.system as string,
+        code: parameters.code as string,
+      });
     case 'validate-code':
-      return await operationsUtils.validateCode({ system: parameters.system, code: parameters.code, display: parameters.display });
+      return await operationsUtils.validateCode({
+        system: parameters.system as string,
+        code: parameters.code as string,
+        display: parameters.display as string,
+      });
     default:
-      throw new Error(`Unknown FHIR operation: ${operation}`);
+      // Should be caught by Zod enum validation
+      throw new Error(`Unknown FHIR operation: ${parsed.operation}`);
   }
 };
 
@@ -222,19 +259,30 @@ toolDefinitions.push({
     required: ['task', 'parameters'],
   },
 });
-toolMapping['executeAdminTask'] = async (args: any) => {
-  const { task, parameters } = args;
-  switch (task) {
+toolMapping['executeAdminTask'] = async (args) => {
+  const parsed = schemas.ExecuteAdminTaskSchema.parse(args);
+  const parameters = parsed.parameters as Record<string, unknown>;
+
+  switch (parsed.task) {
     case 'reindex':
-      return await superAdminUtils.reindexResources({ resourceTypes: parameters.resourceTypes });
+      return await superAdminUtils.reindexResources({ resourceTypes: parameters.resourceTypes as string[] });
     case 'rebuild-compartments':
-      return await superAdminUtils.rebuildCompartments({ resourceType: parameters.resourceType, id: parameters.id });
+      return await superAdminUtils.rebuildCompartments({
+        resourceType: parameters.resourceType as string,
+        id: parameters.id as string,
+      });
     case 'purge':
-      return await superAdminUtils.purgeResources({ resourceType: parameters.resourceType, before: parameters.before });
+      return await superAdminUtils.purgeResources({
+        resourceType: parameters.resourceType as string,
+        before: parameters.before as string,
+      });
     case 'force-set-password':
-      return await superAdminUtils.forceSetPassword({ userId: parameters.userId, password: parameters.password });
+      return await superAdminUtils.forceSetPassword({
+        userId: parameters.userId as string,
+        password: parameters.password as string,
+      });
     default:
-      throw new Error(`Unknown admin task: ${task}`);
+      throw new Error(`Unknown admin task: ${parsed.task}`);
   }
 };
 
@@ -257,20 +305,29 @@ toolDefinitions.push({
     required: ['action', 'parameters'],
   },
 });
-toolMapping['manageFhirCast'] = async (args: any) => {
-  const { action, parameters } = args;
-  switch (action) {
+toolMapping['manageFhirCast'] = async (args) => {
+  const parsed = schemas.ManageFhirCastSchema.parse(args);
+  const parameters = parsed.parameters as Record<string, unknown>;
+
+  switch (parsed.action) {
     case 'publish':
-      // fhircastPublish is in miscUtils, not fhircastUtils
-      return await miscUtils.fhircastPublish({ topic: parameters.topic, event: parameters.event });
+      return await miscUtils.fhircastPublish({
+        topic: parameters.topic as string,
+        event: parameters.event as Record<string, unknown>,
+      });
     case 'subscribe':
-      return await fhircastUtils.fhircastSubscribe({ topic: parameters.topic, events: parameters.events });
+      return await fhircastUtils.fhircastSubscribe({
+        topic: parameters.topic as string,
+        events: parameters.events as string[],
+      });
     case 'unsubscribe':
-      return await fhircastUtils.fhircastUnsubscribe({ subscriptionRequest: parameters.subscriptionRequest });
+      return await fhircastUtils.fhircastUnsubscribe({
+        subscriptionRequest: parameters.subscriptionRequest as string,
+      });
     case 'get-context':
-      return await fhircastUtils.fhircastGetContext({ topic: parameters.topic });
+      return await fhircastUtils.fhircastGetContext({ topic: parameters.topic as string });
     default:
-      throw new Error(`Unknown FHIRcast action: ${action}`);
+      throw new Error(`Unknown FHIRcast action: ${parsed.action}`);
   }
 };
 
@@ -288,7 +345,10 @@ toolDefinitions.push({
     required: ['bundle'],
   },
 });
-toolMapping['postBundle'] = transactionUtils.postBundle;
+toolMapping['postBundle'] = (args) => {
+  const parsed = schemas.PostBundleSchema.parse(args);
+  return transactionUtils.postBundle(parsed as unknown as transactionUtils.PostBundleArgs);
+};
 
 // Auth
 toolDefinitions.push({
@@ -296,7 +356,10 @@ toolDefinitions.push({
   description: 'Returns the current authenticated user/project membership.',
   inputSchema: { type: 'object', properties: {} },
 });
-toolMapping['whoAmI'] = authUtils.whoAmI;
+toolMapping['whoAmI'] = (args) => {
+  schemas.WhoAmISchema.parse(args);
+  return authUtils.whoAmI();
+};
 
 // Project Admin (Not Super Admin)
 toolDefinitions.push({
@@ -317,7 +380,10 @@ toolDefinitions.push({
     required: ['projectId', 'email'],
   },
 });
-toolMapping['inviteUser'] = adminUtils.inviteUser;
+toolMapping['inviteUser'] = (args) => {
+  const parsed = schemas.InviteUserSchema.parse(args);
+  return adminUtils.inviteUser(parsed as unknown as adminUtils.InviteUserArgs);
+};
 
 toolDefinitions.push({
   name: 'addProjectSecret',
@@ -332,7 +398,10 @@ toolDefinitions.push({
     required: ['projectId', 'name', 'value'],
   },
 });
-toolMapping['addProjectSecret'] = adminUtils.addProjectSecret;
+toolMapping['addProjectSecret'] = (args) => {
+  const parsed = schemas.AddProjectSecretSchema.parse(args);
+  return adminUtils.addProjectSecret(parsed as unknown as adminUtils.AddProjectSecretArgs);
+};
 
 // Advanced / Runtime
 toolDefinitions.push({
@@ -348,7 +417,10 @@ toolDefinitions.push({
     required: ['botId', 'data'],
   },
 });
-toolMapping['executeBot'] = advancedUtils.executeBot;
+toolMapping['executeBot'] = (args) => {
+  const parsed = schemas.ExecuteBotSchema.parse(args);
+  return advancedUtils.executeBot(parsed as unknown as advancedUtils.ExecuteBotArgs);
+};
 
 toolDefinitions.push({
   name: 'graphql',
@@ -363,7 +435,10 @@ toolDefinitions.push({
     required: ['query'],
   },
 });
-toolMapping['graphql'] = advancedUtils.graphql;
+toolMapping['graphql'] = (args) => {
+  const parsed = schemas.GraphqlSchema.parse(args);
+  return advancedUtils.graphql(parsed as unknown as advancedUtils.GraphqlArgs);
+};
 
 toolDefinitions.push({
   name: 'pushToAgent',
@@ -380,7 +455,10 @@ toolDefinitions.push({
     required: ['agentId', 'body'],
   },
 });
-toolMapping['pushToAgent'] = advancedUtils.pushToAgent;
+toolMapping['pushToAgent'] = (args) => {
+  const parsed = schemas.PushToAgentSchema.parse(args);
+  return advancedUtils.pushToAgent(parsed as unknown as advancedUtils.PushToAgentArgs);
+};
 
 // Data / Bulk
 toolDefinitions.push({
@@ -395,7 +473,10 @@ toolDefinitions.push({
     },
   },
 });
-toolMapping['bulkExport'] = dataUtils.bulkExport;
+toolMapping['bulkExport'] = (args) => {
+  const parsed = schemas.BulkExportSchema.parse(args);
+  return dataUtils.bulkExport(parsed as unknown as dataUtils.BulkExportArgs);
+};
 
 toolDefinitions.push({
   name: 'bulkImport',
@@ -408,7 +489,10 @@ toolDefinitions.push({
     required: ['url'],
   },
 });
-toolMapping['bulkImport'] = bulkUtils.bulkImport;
+toolMapping['bulkImport'] = (args) => {
+  const parsed = schemas.BulkImportSchema.parse(args);
+  return bulkUtils.bulkImport(parsed as unknown as { url: string });
+};
 
 toolDefinitions.push({
   name: 'readPatientEverything',
@@ -421,7 +505,10 @@ toolDefinitions.push({
     required: ['patientId'],
   },
 });
-toolMapping['readPatientEverything'] = dataUtils.readPatientEverything;
+toolMapping['readPatientEverything'] = (args) => {
+  const parsed = schemas.ReadPatientEverythingSchema.parse(args);
+  return dataUtils.readPatientEverything(parsed as unknown as { patientId: string });
+};
 
 toolDefinitions.push({
   name: 'readPatientSummary',
@@ -434,7 +521,10 @@ toolDefinitions.push({
     required: ['patientId'],
   },
 });
-toolMapping['readPatientSummary'] = dataUtils.readPatientSummary;
+toolMapping['readPatientSummary'] = (args) => {
+  const parsed = schemas.ReadPatientSummarySchema.parse(args);
+  return dataUtils.readPatientSummary(parsed as unknown as { patientId: string });
+};
 
 toolDefinitions.push({
   name: 'readResourceGraph',
@@ -448,7 +538,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id'],
   },
 });
-toolMapping['readResourceGraph'] = dataUtils.readResourceGraph;
+toolMapping['readResourceGraph'] = (args) => {
+  const parsed = schemas.ReadResourceGraphSchema.parse(args);
+  return dataUtils.readResourceGraph(parsed as unknown as { resourceType: string; id: string });
+};
 
 toolDefinitions.push({
   name: 'requestSchema',
@@ -461,7 +554,10 @@ toolDefinitions.push({
     required: ['resourceType'],
   },
 });
-toolMapping['requestSchema'] = dataUtils.requestSchema;
+toolMapping['requestSchema'] = (args) => {
+  const parsed = schemas.RequestSchemaSchema.parse(args);
+  return dataUtils.requestSchema(parsed as unknown as { resourceType: string });
+};
 
 // Versioning
 toolDefinitions.push({
@@ -476,7 +572,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id'],
   },
 });
-toolMapping['readHistory'] = versionUtils.readHistory;
+toolMapping['readHistory'] = (args) => {
+  const parsed = schemas.ReadHistorySchema.parse(args);
+  return versionUtils.readHistory(parsed as unknown as { resourceType: string; id: string });
+};
 
 toolDefinitions.push({
   name: 'readVersion',
@@ -491,7 +590,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id', 'vid'],
   },
 });
-toolMapping['readVersion'] = versionUtils.readVersion;
+toolMapping['readVersion'] = (args) => {
+  const parsed = schemas.ReadVersionSchema.parse(args);
+  return versionUtils.readVersion(parsed as unknown as { resourceType: string; id: string; vid: string });
+};
 
 // Misc Project/User management
 toolDefinitions.push({
@@ -499,7 +601,10 @@ toolDefinitions.push({
   description: 'Lists all projects accessible to the current user.',
   inputSchema: { type: 'object', properties: {} },
 });
-toolMapping['listProjects'] = projectUtils.listProjects;
+toolMapping['listProjects'] = (args) => {
+  schemas.ListProjectsSchema.parse(args);
+  return projectUtils.listProjects();
+};
 
 toolDefinitions.push({
   name: 'switchProject',
@@ -512,14 +617,20 @@ toolDefinitions.push({
     required: ['projectId'],
   },
 });
-toolMapping['switchProject'] = projectUtils.switchProject;
+toolMapping['switchProject'] = (args) => {
+  const parsed = schemas.SwitchProjectSchema.parse(args);
+  return projectUtils.switchProject(parsed as unknown as { projectId: string });
+};
 
 toolDefinitions.push({
   name: 'getHealthCheck',
   description: 'Performs a health check on the Medplum server.',
   inputSchema: { type: 'object', properties: {} },
 });
-toolMapping['getHealthCheck'] = instanceUtils.getHealthCheck;
+toolMapping['getHealthCheck'] = (args) => {
+  schemas.GetHealthCheckSchema.parse(args);
+  return instanceUtils.getHealthCheck();
+};
 
 toolDefinitions.push({
   name: 'sendEmail',
@@ -535,7 +646,10 @@ toolDefinitions.push({
     required: ['to', 'subject'],
   },
 });
-toolMapping['sendEmail'] = adminActionUtils.sendEmail;
+toolMapping['sendEmail'] = (args) => {
+  const parsed = schemas.SendEmailSchema.parse(args);
+  return adminActionUtils.sendEmail(parsed as unknown as adminActionUtils.SendEmailArgs);
+};
 
 // Misc Helpers
 toolDefinitions.push({
@@ -550,7 +664,10 @@ toolDefinitions.push({
     required: ['resource'],
   },
 });
-toolMapping['upsertResource'] = miscUtils.upsertResource;
+toolMapping['upsertResource'] = (args) => {
+  const parsed = schemas.UpsertResourceSchema.parse(args);
+  return miscUtils.upsertResource(parsed as unknown as miscUtils.UpsertResourceArgs);
+};
 
 toolDefinitions.push({
   name: 'createComment',
@@ -565,7 +682,10 @@ toolDefinitions.push({
     required: ['resourceType', 'id', 'text'],
   },
 });
-toolMapping['createComment'] = miscUtils.createComment;
+toolMapping['createComment'] = (args) => {
+  const parsed = schemas.CreateCommentSchema.parse(args);
+  return miscUtils.createComment(parsed as unknown as miscUtils.CreateCommentArgs);
+};
 
 // Consolidated "Start New" tools?
 // startNewProject, startNewUser, startNewPatient could be "provision(type, ...)"?
@@ -583,7 +703,10 @@ toolDefinitions.push({
     required: ['login', 'projectName'],
   },
 });
-toolMapping['startNewProject'] = miscUtils.startNewProject;
+toolMapping['startNewProject'] = (args) => {
+  const parsed = schemas.StartNewProjectSchema.parse(args);
+  return miscUtils.startNewProject(parsed as unknown as miscUtils.StartNewProjectArgs);
+};
 
 toolDefinitions.push({
   name: 'startNewUser',
@@ -596,7 +719,10 @@ toolDefinitions.push({
     required: ['user'],
   },
 });
-toolMapping['startNewUser'] = miscUtils.startNewUser;
+toolMapping['startNewUser'] = (args) => {
+  const parsed = schemas.StartNewUserSchema.parse(args);
+  return miscUtils.startNewUser(parsed as unknown as miscUtils.StartNewUserArgs);
+};
 
 toolDefinitions.push({
   name: 'startNewPatient',
@@ -609,21 +735,30 @@ toolDefinitions.push({
     required: ['patient'],
   },
 });
-toolMapping['startNewPatient'] = miscUtils.startNewPatient;
+toolMapping['startNewPatient'] = (args) => {
+  const parsed = schemas.StartNewPatientSchema.parse(args);
+  return miscUtils.startNewPatient(parsed as unknown as miscUtils.StartNewPatientArgs);
+};
 
 toolDefinitions.push({
   name: 'getProject',
   description: 'Gets the current project details.',
   inputSchema: { type: 'object', properties: {} },
 });
-toolMapping['getProject'] = miscUtils.getProject;
+toolMapping['getProject'] = (args) => {
+  schemas.GetProjectSchema.parse(args);
+  return miscUtils.getProject();
+};
 
 toolDefinitions.push({
   name: 'getProfile',
   description: 'Gets the current user profile.',
   inputSchema: { type: 'object', properties: {} },
 });
-toolMapping['getProfile'] = miscUtils.getProfile;
+toolMapping['getProfile'] = (args) => {
+  schemas.GetProfileSchema.parse(args);
+  return miscUtils.getProfile();
+};
 
 toolDefinitions.push({
   name: 'createResourceIfNoneExist',
@@ -637,7 +772,10 @@ toolDefinitions.push({
     required: ['resource', 'query'],
   },
 });
-toolMapping['createResourceIfNoneExist'] = miscUtils.createResourceIfNoneExist;
+toolMapping['createResourceIfNoneExist'] = (args) => {
+  const parsed = schemas.CreateResourceIfNoneExistSchema.parse(args);
+  return miscUtils.createResourceIfNoneExist(parsed as unknown as miscUtils.CreateResourceIfNoneExistArgs);
+};
 
 // Media/Attachment tools - Consolidate into 'manageMedia'?
 // createMedia, createAttachment, uploadMedia
@@ -655,7 +793,10 @@ toolDefinitions.push({
     required: ['content', 'contentType'],
   },
 });
-toolMapping['createMedia'] = miscUtils.createMedia;
+toolMapping['createMedia'] = (args) => {
+  const parsed = schemas.CreateMediaSchema.parse(args);
+  return miscUtils.createMedia(parsed as unknown as miscUtils.CreateMediaArgs);
+};
 
 toolDefinitions.push({
   name: 'createAttachment',
@@ -670,7 +811,10 @@ toolDefinitions.push({
     required: ['data', 'contentType'],
   },
 });
-toolMapping['createAttachment'] = miscUtils.createAttachment;
+toolMapping['createAttachment'] = (args) => {
+  const parsed = schemas.CreateAttachmentSchema.parse(args);
+  return miscUtils.createAttachment(parsed as unknown as miscUtils.CreateAttachmentArgs);
+};
 
 toolDefinitions.push({
   name: 'uploadMedia',
@@ -685,4 +829,7 @@ toolDefinitions.push({
     required: ['data', 'contentType'],
   },
 });
-toolMapping['uploadMedia'] = miscUtils.uploadMedia;
+toolMapping['uploadMedia'] = (args) => {
+  const parsed = schemas.UploadMediaSchema.parse(args);
+  return miscUtils.uploadMedia(parsed as unknown as miscUtils.UploadMediaArgs);
+};
