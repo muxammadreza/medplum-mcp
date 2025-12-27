@@ -4,21 +4,22 @@
 
 This project implements a **complete Model Context Protocol (MCP) server** designed to seamlessly interact with a Medplum FHIR server. The MCP server provides a standardized interface, enabling Large Language Models (LLMs) to perform Create, Read, Update, Delete, and Search (CRUDS) operations on **ALL** FHIR resources and Medplum-specific resources through a comprehensive suite of tools. This empowers users to manage healthcare data stored in Medplum using natural language commands through any MCP-compatible client (Claude Desktop, VS Code MCP extensions, etc.).
 
-The server implements the full MCP protocol specification, providing dynamically generated tools for every resource type supported by Medplum (over 140 types), plus specialized tools for transactions, binary uploads, authentication, and admin operations.
+The server implements the full MCP protocol specification, providing dynamically generated tools for every resource type supported by Medplum (over 140 types), plus specialized tools for transactions, binary uploads, authentication, project administration, and **Super Admin** instance management.
 
 ## ✨ Current Status
 
 🎉 **MCP Server Implementation Complete!** 🎉
 
 **What's Implemented:**
-- ✅ **Complete Medplum API Coverage**: Generic CRUD tools for all 140+ Medplum/FHIR resources (Patient, Practitioner, Project, Bot, ClientApplication, etc.)
+- ✅ **Complete Medplum API Coverage**: Generic CRUD tools for all 140+ Medplum/FHIR resources.
 - ✅ **Specialized Tools**:
-    - **Transaction/Batch**: `postBundle` for executing FHIR bundles.
-    - **Binary**: `createBinary` and `getBinaryById` for handling attachments.
+    - **Transaction/Batch**: `postBundle`.
+    - **Binary**: `createBinary`, `getBinaryById`.
     - **Auth**: `whoAmI`, `logout`.
-    - **Admin**: `inviteUser`, `addProjectSecret` for project management.
+    - **Project Admin**: `inviteUser`, `addProjectSecret`.
+    - **Super Admin**: `reindexResources`, `rebuildCompartments`, `purgeResources`, `forceSetPassword`.
     - **Operations**: `validateResource`, `expandValueSet`, `lookupCode`, `validateCode`.
-    - **Patch**: `patchResource` for partial updates using JSON Patch.
+    - **Patch**: `patchResource`.
 - ✅ **MCP Server Protocol Implementation** - Full Model Context Protocol server with stdio transport
 - ✅ Comprehensive tool schemas for LLM interaction
 - ✅ **Interactive Chat Harness** - Full MCP client with natural language interface
@@ -29,10 +30,8 @@ The server implements the full MCP protocol specification, providing dynamically
 
 ## 🌟 Features Implemented
 
-The MCP server currently supports tools for **all Medplum resources**.
-
 ### 🛠️ **Generic Resource Management**
-For every resource type (e.g., `Patient`, `Project`, `Bot`, `AccessPolicy`), the following tools are available:
+For every resource type (e.g., `Patient`, `Project`, `Bot`, `AccessPolicy`, `DomainConfiguration`), the following tools are available:
 *   `create<Resource>`: Create a new resource.
 *   `get<Resource>ById`: Retrieve a resource by ID.
 *   `update<Resource>`: Update an existing resource.
@@ -40,24 +39,20 @@ For every resource type (e.g., `Patient`, `Project`, `Bot`, `AccessPolicy`), the
 *   `search<Resource>s`: Search for resources.
 
 ### 🧪 **Specific Domain Tools**
-Specific tools with enhanced logic are available for core clinical resources:
-*   **Patient**: `createPatient`, `searchPatients`, etc.
-*   **Practitioner**: `createPractitioner`, `searchPractitioners`, etc.
-*   **Organization**: `createOrganization`, `searchOrganizations`, etc.
-*   **Encounter**: `createEncounter`, `searchEncounters`, etc.
-*   **Observation**: `createObservation`, `searchObservations`, etc.
-*   **Medication**: `createMedication`, `searchMedications`, etc.
-*   **MedicationRequest**: `createMedicationRequest`, `searchMedicationRequests`, etc.
-*   **EpisodeOfCare**: `createEpisodeOfCare`, `searchEpisodesOfCare`, etc.
-*   **Condition**: `createCondition`, `searchConditions`, etc.
+Specific tools with enhanced logic are available for core clinical resources: `Patient`, `Practitioner`, `Organization`, `Encounter`, `Observation`, `Medication`, `MedicationRequest`, `EpisodeOfCare`, `Condition`.
 
-### ⚙️ **Advanced Operations**
+### ⚙️ **Advanced & Admin Operations**
 *   **Transactions**: `postBundle` (Execute a FHIR transaction/batch bundle).
 *   **Binary**: `createBinary`, `getBinaryById` (Upload/Download files).
 *   **Authentication**: `whoAmI` (Current user info), `logout`.
-*   **Admin**:
+*   **Project Admin**:
     *   `inviteUser`: Invite users to projects with detailed control (admin access, scope, etc.).
     *   `addProjectSecret`: Securely add or update project secrets.
+*   **Super Admin** (Instance Management):
+    *   `reindexResources`: Reindex resources for search.
+    *   `rebuildCompartments`: Rebuild resource compartments.
+    *   `purgeResources`: Permanently delete resources (e.g., old AuditEvents).
+    *   `forceSetPassword`: Forcefully set a user's password.
 *   **Validation**: `validateResource` (Validate resource content).
 *   **Terminology**: `expandValueSet`, `lookupCode`, `validateCode`.
 *   **Patch**: `patchResource` (Advanced partial updates).
@@ -68,99 +63,54 @@ Specific tools with enhanced logic are available for core clinical resources:
 *   **Runtime**: Node.js
 *   **Language**: TypeScript
 *   **FHIR Server Interaction**: `@medplum/core`, `@medplum/fhirtypes`
-*   **LLM Integration**: OpenAI API (specifically `gpt-4o` in the test harness)
-*   **Testing**: Jest (for integration tests), Manual E2E via test harness
+*   **LLM Integration**: OpenAI API
+*   **Testing**: Jest
 *   **Linting & Formatting**: ESLint, Prettier
-*   **Environment Management**: `dotenv`
-*   **HTTP Client (for Medplum SDK)**: `node-fetch`
 
 ## 📁 Project Structure
 
 ```
 medplum-mcp/
 ├── src/                  # Source code
-│   ├── config/           # Medplum client configuration (medplumClient.ts)
+│   ├── config/           # Medplum client configuration
 │   ├── tools/            # FHIR resource utility functions
 │   │   ├── genericResourceTool.ts # Generic CRUD implementation
 │   │   ├── toolRegistry.ts        # Dynamic tool registration
-│   │   ├── patientUtils.ts        # Specific patient logic
-│   │   ├── transactionUtils.ts    # Transaction support
-│   │   ├── binaryUtils.ts         # Binary support
-│   │   ├── authUtils.ts           # Auth support
-│   │   ├── adminUtils.ts          # Admin support
-│   │   ├── operationsUtils.ts     # Operations support
+│   │   ├── adminUtils.ts          # Project Admin support
+│   │   ├── superAdminUtils.ts     # Super Admin support
 │   │   └── ...
 │   ├── index.ts          # Main application entry point
 │   ├── llm-test-harness.ts # Script for testing LLM tool calling
 │   └── test-connection.ts  # Script for basic Medplum connection test
 ├── tests/                # Test suites
-│   └── integration/      # Jest integration tests for tools
-├── .eslintrc.js
-├── .gitignore
-├── .prettierrc.js
-├── .prettierignore
-├── package.json
-├── tsconfig.json
+│   └── integration/      # Jest integration tests
+├── ...
 └── README.md
 ```
 
 ## ⚙️ Setup and Configuration
 
-1.  **Prerequisites**:
-    *   Node.js (refer to `package.json` for engine specifics; LTS versions recommended)
-    *   A running Medplum server instance (e.g., local Dockerized instance at `http://localhost:8103/`)
-    *   Medplum client credentials (Client ID and Client Secret)
-
-2.  **Installation**:
-    ```bash
-    git clone https://github.com/rkirkendall/medplum-mcp.git
-    cd medplum-mcp
-    npm install
-    ```
-
-3.  **Environment Variables**:
-    Create a `.env` file in the project root with your specific Medplum server details and API keys:
-    ```dotenv
-    MEDPLUM_BASE_URL=http://your-medplum-server-url/
-    MEDPLUM_CLIENT_ID=your_client_id
-    MEDPLUM_CLIENT_SECRET=your_client_secret
-    OPENAI_API_KEY=your_openai_api_key # Required for llm-test-harness.ts
-    ```
+1.  **Prerequisites**: Node.js, Medplum server instance, Medplum client credentials.
+2.  **Installation**: `npm install`
+3.  **Environment Variables**: Create `.env` with `MEDPLUM_BASE_URL`, `MEDPLUM_CLIENT_ID`, `MEDPLUM_CLIENT_SECRET`.
 
 ## 🚀 Usage
 
-### 💬 Interactive Chat Harness (Recommended)
-The most user-friendly way to test your MCP server is through the interactive chat interface:
-
+### 💬 Interactive Chat Harness
 ```bash
-# Build and run the chat harness
 npm run chat
-
-# Or in development mode
-npx ts-node src/llm-test-harness.ts
 ```
 
-### ▶️ Running the MCP Server Directly
+### ▶️ Running the MCP Server
 ```bash
 npm start # Runs the MCP server with stdio transport
-npm run dev # Development mode with live reloading
-```
-
-### 🧪 Alternative Testing Methods
-```bash
-# MCP Inspector (web-based tool testing)
-npx @modelcontextprotocol/inspector node dist/index.js
+npm run dev # Development mode
 ```
 
 ## ✅ Testing
-### 🔗 Integration Tests
-Integration tests use Jest and interact with a live Medplum instance (configured via `.env`).
-
-To run all integration tests:
 ```bash
 npx jest tests/integration
 ```
 
 ## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License

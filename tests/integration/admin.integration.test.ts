@@ -75,17 +75,17 @@ describe('Admin Tools Integration', () => {
   });
 
   describe('GenericResourceTool.patch', () => {
-      it('should patch a resource', async () => {
-          const resourceType = 'Patient';
-          const id = 'pat-123';
-          const patch = { op: 'replace', path: '/gender', value: 'male' };
+    it('should patch a resource', async () => {
+      const resourceType = 'Patient';
+      const id = 'pat-123';
+      const patch = { op: 'replace', path: '/gender', value: 'male' };
 
-          (medplum.patchResource as jest.Mock).mockResolvedValue({ resourceType, id, gender: 'male' });
+      (medplum.patchResource as jest.Mock).mockResolvedValue({ resourceType, id, gender: 'male' });
 
-          const result = await GenericResourceTool.patch(resourceType, id, patch);
+      const result = await GenericResourceTool.patch(resourceType, id, patch);
 
-          expect(medplum.patchResource).toHaveBeenCalledWith(resourceType, id, patch);
-          expect(result).toEqual({ resourceType, id, gender: 'male' });
-      });
+      expect(medplum.patchResource).toHaveBeenCalledWith(resourceType, id, patch);
+      expect(result).toEqual({ resourceType, id, gender: 'male' });
+    });
   });
 });

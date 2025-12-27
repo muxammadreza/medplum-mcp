@@ -27,6 +27,7 @@ import * as binaryUtils from './binaryUtils';
 import * as authUtils from './authUtils';
 import * as operationsUtils from './operationsUtils';
 import * as adminUtils from './adminUtils';
+import * as superAdminUtils from './superAdminUtils';
 
 // Map of resource type to specific utils
 const specificUtils: Record<string, any> = {
@@ -222,6 +223,61 @@ toolDefinitions.push({
   },
 });
 toolMapping['addProjectSecret'] = adminUtils.addProjectSecret;
+
+// Register Super Admin Tools
+toolDefinitions.push({
+  name: 'reindexResources',
+  description: 'Super Admin: Reindexes resources.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceTypes: { type: 'array', items: { type: 'string' } },
+    },
+  },
+});
+toolMapping['reindexResources'] = superAdminUtils.reindexResources;
+
+toolDefinitions.push({
+  name: 'rebuildCompartments',
+  description: 'Super Admin: Rebuilds compartments for a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['rebuildCompartments'] = superAdminUtils.rebuildCompartments;
+
+toolDefinitions.push({
+  name: 'purgeResources',
+  description: 'Super Admin: Purges resources before a certain date.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      before: { type: 'string', description: 'ISO Date string' },
+    },
+    required: ['resourceType', 'before'],
+  },
+});
+toolMapping['purgeResources'] = superAdminUtils.purgeResources;
+
+toolDefinitions.push({
+  name: 'forceSetPassword',
+  description: 'Super Admin: Force sets a password for a user.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      userId: { type: 'string' },
+      password: { type: 'string' },
+    },
+    required: ['userId', 'password'],
+  },
+});
+toolMapping['forceSetPassword'] = superAdminUtils.forceSetPassword;
 
 // 1. Add Specific Tools first
 const specificToolNames = new Set(specificToolDefinitions.map((t) => t.name));
