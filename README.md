@@ -11,15 +11,16 @@ The server implements the full MCP protocol specification, providing dynamically
 🎉 **MCP Server Implementation Complete!** 🎉
 
 **What's Implemented:**
+
 - ✅ **Complete Medplum API Coverage**: Generic CRUD tools for all 140+ Medplum/FHIR resources.
 - ✅ **Specialized Tools**:
-    - **Transaction/Batch**: `postBundle`.
-    - **Binary**: `createBinary`, `getBinaryById`.
-    - **Auth**: `whoAmI`, `logout`.
-    - **Project Admin**: `inviteUser`, `addProjectSecret`.
-    - **Super Admin**: `reindexResources`, `rebuildCompartments`, `purgeResources`, `forceSetPassword`.
-    - **Operations**: `validateResource`, `expandValueSet`, `lookupCode`, `validateCode`.
-    - **Patch**: `patchResource`.
+  - **Transaction/Batch**: `postBundle`.
+  - **Binary**: `createBinary`, `getBinaryById`.
+  - **Auth**: `whoAmI`, `logout`.
+  - **Project Admin**: `inviteUser`, `addProjectSecret`.
+  - **Super Admin**: `reindexResources`, `rebuildCompartments`, `purgeResources`, `forceSetPassword`.
+  - **Operations**: `validateResource`, `expandValueSet`, `lookupCode`, `validateCode`.
+  - **Patch**: `patchResource`.
 - ✅ **MCP Server Protocol Implementation** - Full Model Context Protocol server with stdio transport
 - ✅ Comprehensive tool schemas for LLM interaction
 - ✅ **Interactive Chat Harness** - Full MCP client with natural language interface
@@ -31,41 +32,45 @@ The server implements the full MCP protocol specification, providing dynamically
 ## 🌟 Features Implemented
 
 ### 🛠️ **Generic Resource Management**
+
 For every resource type (e.g., `Patient`, `Project`, `Bot`, `AccessPolicy`, `DomainConfiguration`), the following tools are available:
-*   `create<Resource>`: Create a new resource.
-*   `get<Resource>ById`: Retrieve a resource by ID.
-*   `update<Resource>`: Update an existing resource.
-*   `delete<Resource>`: Delete a resource.
-*   `search<Resource>s`: Search for resources.
+
+- `create<Resource>`: Create a new resource.
+- `get<Resource>ById`: Retrieve a resource by ID.
+- `update<Resource>`: Update an existing resource.
+- `delete<Resource>`: Delete a resource.
+- `search<Resource>s`: Search for resources.
 
 ### 🧪 **Specific Domain Tools**
+
 Specific tools with enhanced logic are available for core clinical resources: `Patient`, `Practitioner`, `Organization`, `Encounter`, `Observation`, `Medication`, `MedicationRequest`, `EpisodeOfCare`, `Condition`.
 
 ### ⚙️ **Advanced & Admin Operations**
-*   **Transactions**: `postBundle` (Execute a FHIR transaction/batch bundle).
-*   **Binary**: `createBinary`, `getBinaryById` (Upload/Download files).
-*   **Authentication**: `whoAmI` (Current user info), `logout`.
-*   **Project Admin**:
-    *   `inviteUser`: Invite users to projects with detailed control (admin access, scope, etc.).
-    *   `addProjectSecret`: Securely add or update project secrets.
-*   **Super Admin** (Instance Management):
-    *   `reindexResources`: Reindex resources for search.
-    *   `rebuildCompartments`: Rebuild resource compartments.
-    *   `purgeResources`: Permanently delete resources (e.g., old AuditEvents).
-    *   `forceSetPassword`: Forcefully set a user's password.
-*   **Validation**: `validateResource` (Validate resource content).
-*   **Terminology**: `expandValueSet`, `lookupCode`, `validateCode`.
-*   **Patch**: `patchResource` (Advanced partial updates).
-*   **General Search**: `generalFhirSearch` (Advanced search across any resource).
+
+- **Transactions**: `postBundle` (Execute a FHIR transaction/batch bundle).
+- **Binary**: `createBinary`, `getBinaryById` (Upload/Download files).
+- **Authentication**: `whoAmI` (Current user info), `logout`.
+- **Project Admin**:
+  - `inviteUser`: Invite users to projects with detailed control (admin access, scope, etc.).
+  - `addProjectSecret`: Securely add or update project secrets.
+- **Super Admin** (Instance Management):
+  - `reindexResources`: Reindex resources for search.
+  - `rebuildCompartments`: Rebuild resource compartments.
+  - `purgeResources`: Permanently delete resources (e.g., old AuditEvents).
+  - `forceSetPassword`: Forcefully set a user's password.
+- **Validation**: `validateResource` (Validate resource content).
+- **Terminology**: `expandValueSet`, `lookupCode`, `validateCode`.
+- **Patch**: `patchResource` (Advanced partial updates).
+- **General Search**: `generalFhirSearch` (Advanced search across any resource).
 
 ## 🛠️ Technology Stack
 
-*   **Runtime**: Node.js
-*   **Language**: TypeScript
-*   **FHIR Server Interaction**: `@medplum/core`, `@medplum/fhirtypes`
-*   **LLM Integration**: OpenAI API
-*   **Testing**: Jest
-*   **Linting & Formatting**: ESLint, Prettier
+- **Runtime**: Node.js
+- **Language**: TypeScript
+- **FHIR Server Interaction**: `@medplum/core`, `@medplum/fhirtypes`
+- **LLM Integration**: OpenAI API
+- **Testing**: Jest
+- **Linting & Formatting**: ESLint, Prettier
 
 ## 📁 Project Structure
 
@@ -97,20 +102,24 @@ medplum-mcp/
 ## 🚀 Usage
 
 ### 💬 Interactive Chat Harness
+
 ```bash
 npm run chat
 ```
 
 ### ▶️ Running the MCP Server
+
 ```bash
 npm start # Runs the MCP server with stdio transport
 npm run dev # Development mode
 ```
 
 ## ✅ Testing
+
 ```bash
 npx jest tests/integration
 ```
 
 ## 📄 License
+
 MIT License
