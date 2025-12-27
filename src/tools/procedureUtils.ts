@@ -118,7 +118,7 @@ export async function updateProcedure(
   };
 
   if (subjectId === null) {
-    (updated as any).subject = undefined;
+    delete (updated as any).subject;
   } else if (subjectId) {
     updated.subject = { reference: `Patient/${subjectId}` };
   }

@@ -1299,8 +1299,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         result = await toolFunction(args[idKey]);
       } else if (toolName.startsWith('update')) {
         // Update tools that take ID and updates object
-        const { patientId, practitionerId, organizationId, encounterId, observationId, medicationRequestId, medicationId, episodeOfCareId, conditionId, diagnosticReportId, procedureId, ...updates } = args;
-        const id = patientId || practitionerId || organizationId || encounterId || observationId || medicationRequestId || medicationId || episodeOfCareId || conditionId || diagnosticReportId || procedureId;
+        const idKeys = [
+          'patientId',
+          'practitionerId',
+          'organizationId',
+          'encounterId',
+          'observationId',
+          'medicationRequestId',
+          'medicationId',
+          'episodeOfCareId',
+          'conditionId',
+          'diagnosticReportId',
+          'procedureId',
+        ];
+        const id = idKeys
+          .map((key) => (args as any)[key])
+          .find((value) => value !== undefined && value !== null);
+        const updates = { ...args };
+        idKeys.forEach((key) => delete (updates as any)[key]);
+        if (!id) {
+          throw new Error('ID parameter is required for update tools');
+        }
         
         // Special handling for updateCondition
         if (toolName === 'updateCondition') {
