@@ -4,26 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { resourceTypes } from '../resourceList';
 import { GenericResourceTool } from './genericResourceTool';
-import { specificToolDefinitions } from './specificToolSchemas';
-import { ConditionClinicalStatusCodes, ConditionVerificationStatusCodes } from './conditionUtils';
-
-// Import existing specific implementations
-import * as patientUtils from './patientUtils';
-import * as practitionerUtils from './practitionerUtils';
-import * as organizationUtils from './organizationUtils';
-import * as encounterUtils from './encounterUtils';
-import * as observationUtils from './observationUtils';
-import * as medicationRequestUtils from './medicationRequestUtils';
-import * as medicationUtils from './medicationUtils';
-import * as episodeOfCareUtils from './episodeOfCareUtils';
-import * as conditionUtils from './conditionUtils';
-import * as generalFhirSearchUtils from './generalFhirSearchUtils';
 
 // Import new utils
 import * as transactionUtils from './transactionUtils';
-import * as binaryUtils from './binaryUtils';
 import * as authUtils from './authUtils';
 import * as operationsUtils from './operationsUtils';
 import * as adminUtils from './adminUtils';
@@ -37,26 +21,101 @@ import * as instanceUtils from './instanceUtils';
 import * as adminActionUtils from './adminActionUtils';
 import * as bulkUtils from './bulkUtils';
 import * as fhircastUtils from './fhircastUtils';
-
-// Map of resource type to specific utils
-const specificUtils: Record<string, any> = {
-  Patient: patientUtils,
-  Practitioner: practitionerUtils,
-  Organization: organizationUtils,
-  Encounter: encounterUtils,
-  Observation: observationUtils,
-  MedicationRequest: medicationRequestUtils,
-  Medication: medicationUtils,
-  EpisodeOfCare: episodeOfCareUtils,
-  Condition: conditionUtils,
-};
+import { generalFhirSearch } from './generalFhirSearchUtils';
 
 export const toolDefinitions: any[] = [];
 export const toolMapping: Record<string, (...args: any[]) => Promise<any>> = {};
 
-// Register General FHIR Search Tool
+// --- Generic Resource Tools (The Core 5) ---
+
 toolDefinitions.push({
-  name: 'generalFhirSearch',
+  name: 'createResource',
+  description: 'Creates a new FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to create (e.g., Patient, Observation).',
+      },
+      resource: {
+        type: 'object',
+        description: 'The resource data.',
+        additionalProperties: true,
+      },
+    },
+    required: ['resourceType', 'resource'],
+  },
+});
+toolMapping['createResource'] = (args: any) => GenericResourceTool.create(args.resourceType, args.resource);
+
+toolDefinitions.push({
+  name: 'getResource',
+  description: 'Retrieves a FHIR resource by its ID.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to retrieve.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['getResource'] = (args: any) => GenericResourceTool.getById(args.resourceType, args.id);
+
+toolDefinitions.push({
+  name: 'updateResource',
+  description: 'Updates an existing FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to update.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+      updates: {
+        type: 'object',
+        description: 'The fields to update.',
+        additionalProperties: true,
+      },
+    },
+    required: ['resourceType', 'id', 'updates'],
+  },
+});
+toolMapping['updateResource'] = (args: any) => GenericResourceTool.update(args.resourceType, args.id, args.updates);
+
+toolDefinitions.push({
+  name: 'deleteResource',
+  description: 'Deletes a FHIR resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: {
+        type: 'string',
+        description: 'The type of the resource to delete.',
+      },
+      id: {
+        type: 'string',
+        description: 'The unique ID of the resource.',
+      },
+    },
+    required: ['resourceType', 'id'],
+  },
+});
+toolMapping['deleteResource'] = (args: any) => GenericResourceTool.delete(args.resourceType, args.id);
+
+toolDefinitions.push({
+  name: 'searchResource',
   description: 'Performs a generic FHIR search operation on any resource type with custom query parameters.',
   inputSchema: {
     type: 'object',
@@ -82,56 +141,156 @@ toolDefinitions.push({
     required: ['resourceType', 'queryParams'],
   },
 });
-toolMapping['generalFhirSearch'] = generalFhirSearchUtils.generalFhirSearch;
+toolMapping['searchResource'] = generalFhirSearch;
 
-// Register Transaction Tool
+toolDefinitions.push({
+  name: 'patchResource',
+  description: 'Patches a resource.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      resourceType: { type: 'string' },
+      id: { type: 'string' },
+      patch: {
+        type: 'object',
+        description: 'JSON Patch operations',
+        additionalProperties: true,
+      },
+    },
+    required: ['resourceType', 'id', 'patch'],
+  },
+});
+toolMapping['patchResource'] = (args: any) => GenericResourceTool.patch(args.resourceType, args.id, args.patch);
+
+// --- Consolidated Utility Tools ---
+
+// 1. FHIR Operations (validate, expand, lookup)
+toolDefinitions.push({
+  name: 'executeFhirOperation',
+  description: 'Executes a standard FHIR operation (e.g., $validate, $expand, $lookup).',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      operation: {
+        type: 'string',
+        description: 'The operation name (e.g., "validate-resource", "expand-valueset", "lookup-code", "validate-code").',
+        enum: ['validate-resource', 'expand-valueset', 'lookup-code', 'validate-code'],
+      },
+      parameters: {
+        type: 'object',
+        description: 'Parameters for the operation.',
+        additionalProperties: true,
+      },
+    },
+    required: ['operation', 'parameters'],
+  },
+});
+toolMapping['executeFhirOperation'] = async (args: any) => {
+  const { operation, parameters } = args;
+  switch (operation) {
+    case 'validate-resource':
+      return await operationsUtils.validateResource({ resource: parameters.resource, resourceType: parameters.resourceType });
+    case 'expand-valueset':
+      return await operationsUtils.expandValueSet({ url: parameters.url, filter: parameters.filter });
+    case 'lookup-code':
+      return await operationsUtils.lookupCode({ system: parameters.system, code: parameters.code });
+    case 'validate-code':
+      return await operationsUtils.validateCode({ system: parameters.system, code: parameters.code, display: parameters.display });
+    default:
+      throw new Error(`Unknown FHIR operation: ${operation}`);
+  }
+};
+
+// 2. Admin Tasks (Super Admin)
+toolDefinitions.push({
+  name: 'executeAdminTask',
+  description: 'Executes an administrative task (Super Admin only).',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      task: {
+        type: 'string',
+        description: 'The task to perform.',
+        enum: ['reindex', 'rebuild-compartments', 'purge', 'force-set-password'],
+      },
+      parameters: {
+        type: 'object',
+        description: 'Parameters for the task.',
+        additionalProperties: true,
+      },
+    },
+    required: ['task', 'parameters'],
+  },
+});
+toolMapping['executeAdminTask'] = async (args: any) => {
+  const { task, parameters } = args;
+  switch (task) {
+    case 'reindex':
+      return await superAdminUtils.reindexResources({ resourceTypes: parameters.resourceTypes });
+    case 'rebuild-compartments':
+      return await superAdminUtils.rebuildCompartments({ resourceType: parameters.resourceType, id: parameters.id });
+    case 'purge':
+      return await superAdminUtils.purgeResources({ resourceType: parameters.resourceType, before: parameters.before });
+    case 'force-set-password':
+      return await superAdminUtils.forceSetPassword({ userId: parameters.userId, password: parameters.password });
+    default:
+      throw new Error(`Unknown admin task: ${task}`);
+  }
+};
+
+// 3. FHIRcast Management
+toolDefinitions.push({
+  name: 'manageFhirCast',
+  description: 'Manages FHIRcast subscriptions and events.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      action: {
+        type: 'string',
+        enum: ['publish', 'subscribe', 'unsubscribe', 'get-context'],
+      },
+      parameters: {
+        type: 'object',
+        additionalProperties: true,
+      },
+    },
+    required: ['action', 'parameters'],
+  },
+});
+toolMapping['manageFhirCast'] = async (args: any) => {
+  const { action, parameters } = args;
+  switch (action) {
+    case 'publish':
+      // fhircastPublish is in miscUtils, not fhircastUtils
+      return await miscUtils.fhircastPublish({ topic: parameters.topic, event: parameters.event });
+    case 'subscribe':
+      return await fhircastUtils.fhircastSubscribe({ topic: parameters.topic, events: parameters.events });
+    case 'unsubscribe':
+      return await fhircastUtils.fhircastUnsubscribe({ subscriptionRequest: parameters.subscriptionRequest });
+    case 'get-context':
+      return await fhircastUtils.fhircastGetContext({ topic: parameters.topic });
+    default:
+      throw new Error(`Unknown FHIRcast action: ${action}`);
+  }
+};
+
+// --- Preserved Utility Tools (Distinct Domains) ---
+
+// Transaction
 toolDefinitions.push({
   name: 'postBundle',
   description: 'Executes a FHIR Bundle (transaction or batch).',
   inputSchema: {
     type: 'object',
     properties: {
-      bundle: {
-        type: 'object',
-        description: 'The FHIR Bundle to execute.',
-        additionalProperties: true,
-      },
+      bundle: { type: 'object' },
     },
     required: ['bundle'],
   },
 });
 toolMapping['postBundle'] = transactionUtils.postBundle;
 
-// Register Binary Tools
-toolDefinitions.push({
-  name: 'createBinary',
-  description: 'Creates a Binary resource (uploads data).',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      data: { type: 'string', description: 'Base64 encoded data.' },
-      contentType: { type: 'string', description: 'MIME type of the data.' },
-      filename: { type: 'string', description: 'Optional filename.' },
-    },
-    required: ['data', 'contentType'],
-  },
-});
-toolMapping['createBinary'] = binaryUtils.createBinary;
-
-toolDefinitions.push({
-  name: 'getBinaryById',
-  description: 'Retrieves a Binary resource.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      binaryId: { type: 'string', description: 'ID of the Binary resource.' },
-    },
-    required: ['binaryId'],
-  },
-});
-toolMapping['getBinaryById'] = binaryUtils.getBinaryById;
-
-// Register Auth Tools
+// Auth
 toolDefinitions.push({
   name: 'whoAmI',
   description: 'Returns the current authenticated user/project membership.',
@@ -139,65 +298,7 @@ toolDefinitions.push({
 });
 toolMapping['whoAmI'] = authUtils.whoAmI;
 
-// Register Operations Tools
-toolDefinitions.push({
-  name: 'validateResource',
-  description: 'Validates a FHIR resource.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      resourceType: { type: 'string' },
-      resource: { type: 'object' },
-    },
-    required: ['resource'],
-  },
-});
-toolMapping['validateResource'] = operationsUtils.validateResource;
-
-toolDefinitions.push({
-  name: 'expandValueSet',
-  description: 'Expands a ValueSet.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      url: { type: 'string', description: 'The canonical URL of the ValueSet to expand.' },
-      filter: { type: 'string', description: 'Text filter for the expansion.' },
-    },
-    required: ['url'],
-  },
-});
-toolMapping['expandValueSet'] = operationsUtils.expandValueSet;
-
-toolDefinitions.push({
-  name: 'lookupCode',
-  description: 'Looks up a code in a CodeSystem.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      system: { type: 'string' },
-      code: { type: 'string' },
-    },
-    required: ['system', 'code'],
-  },
-});
-toolMapping['lookupCode'] = operationsUtils.lookupCode;
-
-toolDefinitions.push({
-  name: 'validateCode',
-  description: 'Validates a code in a CodeSystem.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      system: { type: 'string' },
-      code: { type: 'string' },
-      display: { type: 'string' },
-    },
-    required: ['system', 'code'],
-  },
-});
-toolMapping['validateCode'] = operationsUtils.validateCode;
-
-// Register Admin Tools
+// Project Admin (Not Super Admin)
 toolDefinitions.push({
   name: 'inviteUser',
   description: 'Invites a user to the project.',
@@ -207,7 +308,7 @@ toolDefinitions.push({
       projectId: { type: 'string' },
       email: { type: 'string' },
       resourceType: { type: 'string', enum: ['Patient', 'Practitioner', 'RelatedPerson'] },
-      accessPolicy: { type: 'object', description: 'Reference to AccessPolicy' },
+      accessPolicy: { type: 'object' },
       firstName: { type: 'string' },
       lastName: { type: 'string' },
       sendEmail: { type: 'boolean' },
@@ -233,62 +334,7 @@ toolDefinitions.push({
 });
 toolMapping['addProjectSecret'] = adminUtils.addProjectSecret;
 
-// Register Super Admin Tools
-toolDefinitions.push({
-  name: 'reindexResources',
-  description: 'Super Admin: Reindexes resources.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      resourceTypes: { type: 'array', items: { type: 'string' } },
-    },
-  },
-});
-toolMapping['reindexResources'] = superAdminUtils.reindexResources;
-
-toolDefinitions.push({
-  name: 'rebuildCompartments',
-  description: 'Super Admin: Rebuilds compartments for a resource.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      resourceType: { type: 'string' },
-      id: { type: 'string' },
-    },
-    required: ['resourceType', 'id'],
-  },
-});
-toolMapping['rebuildCompartments'] = superAdminUtils.rebuildCompartments;
-
-toolDefinitions.push({
-  name: 'purgeResources',
-  description: 'Super Admin: Purges resources before a certain date.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      resourceType: { type: 'string' },
-      before: { type: 'string', description: 'ISO Date string' },
-    },
-    required: ['resourceType', 'before'],
-  },
-});
-toolMapping['purgeResources'] = superAdminUtils.purgeResources;
-
-toolDefinitions.push({
-  name: 'forceSetPassword',
-  description: 'Super Admin: Force sets a password for a user.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      userId: { type: 'string' },
-      password: { type: 'string' },
-    },
-    required: ['userId', 'password'],
-  },
-});
-toolMapping['forceSetPassword'] = superAdminUtils.forceSetPassword;
-
-// Register Advanced Utils
+// Advanced / Runtime
 toolDefinitions.push({
   name: 'executeBot',
   description: 'Executes a Bot.',
@@ -336,7 +382,7 @@ toolDefinitions.push({
 });
 toolMapping['pushToAgent'] = advancedUtils.pushToAgent;
 
-// Register Data Utils
+// Data / Bulk
 toolDefinitions.push({
   name: 'bulkExport',
   description: 'Starts a bulk export job.',
@@ -350,6 +396,19 @@ toolDefinitions.push({
   },
 });
 toolMapping['bulkExport'] = dataUtils.bulkExport;
+
+toolDefinitions.push({
+  name: 'bulkImport',
+  description: 'Starts a bulk import job using the $import operation.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      url: { type: 'string' },
+    },
+    required: ['url'],
+  },
+});
+toolMapping['bulkImport'] = bulkUtils.bulkImport;
 
 toolDefinitions.push({
   name: 'readPatientEverything',
@@ -404,7 +463,7 @@ toolDefinitions.push({
 });
 toolMapping['requestSchema'] = dataUtils.requestSchema;
 
-// Register Version Utils
+// Versioning
 toolDefinitions.push({
   name: 'readHistory',
   description: 'Reads the history of a resource.',
@@ -434,7 +493,51 @@ toolDefinitions.push({
 });
 toolMapping['readVersion'] = versionUtils.readVersion;
 
-// Register Misc Utils
+// Misc Project/User management
+toolDefinitions.push({
+  name: 'listProjects',
+  description: 'Lists all projects accessible to the current user.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['listProjects'] = projectUtils.listProjects;
+
+toolDefinitions.push({
+  name: 'switchProject',
+  description: 'Switches the active project context.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      projectId: { type: 'string' },
+    },
+    required: ['projectId'],
+  },
+});
+toolMapping['switchProject'] = projectUtils.switchProject;
+
+toolDefinitions.push({
+  name: 'getHealthCheck',
+  description: 'Performs a health check on the Medplum server.',
+  inputSchema: { type: 'object', properties: {} },
+});
+toolMapping['getHealthCheck'] = instanceUtils.getHealthCheck;
+
+toolDefinitions.push({
+  name: 'sendEmail',
+  description: 'Sends an email using the Medplum Email API.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      to: { type: 'string' },
+      subject: { type: 'string' },
+      text: { type: 'string' },
+      html: { type: 'string' },
+    },
+    required: ['to', 'subject'],
+  },
+});
+toolMapping['sendEmail'] = adminActionUtils.sendEmail;
+
+// Misc Helpers
 toolDefinitions.push({
   name: 'upsertResource',
   description: 'Upserts a resource (update if exists, create if not).',
@@ -464,6 +567,10 @@ toolDefinitions.push({
 });
 toolMapping['createComment'] = miscUtils.createComment;
 
+// Consolidated "Start New" tools?
+// startNewProject, startNewUser, startNewPatient could be "provision(type, ...)"?
+// But startNewProject is quite distinct (creates a project).
+// Let's keep them.
 toolDefinitions.push({
   name: 'startNewProject',
   description: 'Starts a new project.',
@@ -532,6 +639,9 @@ toolDefinitions.push({
 });
 toolMapping['createResourceIfNoneExist'] = miscUtils.createResourceIfNoneExist;
 
+// Media/Attachment tools - Consolidate into 'manageMedia'?
+// createMedia, createAttachment, uploadMedia
+// These are often distinct enough.
 toolDefinitions.push({
   name: 'createMedia',
   description: 'Creates a Media resource.',
@@ -576,367 +686,3 @@ toolDefinitions.push({
   },
 });
 toolMapping['uploadMedia'] = miscUtils.uploadMedia;
-
-toolDefinitions.push({
-  name: 'fhircastPublish',
-  description: 'Publishes a FHIRcast event.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      topic: { type: 'string' },
-      event: { type: 'object' },
-    },
-    required: ['topic', 'event'],
-  },
-});
-toolMapping['fhircastPublish'] = miscUtils.fhircastPublish;
-
-// Register Project Utils
-toolDefinitions.push({
-  name: 'listProjects',
-  description: 'Lists all projects accessible to the current user.',
-  inputSchema: { type: 'object', properties: {} },
-});
-toolMapping['listProjects'] = projectUtils.listProjects;
-
-toolDefinitions.push({
-  name: 'switchProject',
-  description: 'Switches the active project context.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      projectId: { type: 'string' },
-    },
-    required: ['projectId'],
-  },
-});
-toolMapping['switchProject'] = projectUtils.switchProject;
-
-// Register Instance Utils
-toolDefinitions.push({
-  name: 'getHealthCheck',
-  description: 'Performs a health check on the Medplum server.',
-  inputSchema: { type: 'object', properties: {} },
-});
-toolMapping['getHealthCheck'] = instanceUtils.getHealthCheck;
-
-// Register Admin Action Utils
-toolDefinitions.push({
-  name: 'sendEmail',
-  description: 'Sends an email using the Medplum Email API.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      to: { type: 'string' },
-      subject: { type: 'string' },
-      text: { type: 'string' },
-      html: { type: 'string' },
-    },
-    required: ['to', 'subject'],
-  },
-});
-toolMapping['sendEmail'] = adminActionUtils.sendEmail;
-
-// Register Bulk Utils
-toolDefinitions.push({
-  name: 'bulkImport',
-  description: 'Starts a bulk import job using the $import operation.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      url: { type: 'string', description: 'The URL of the FHIR NDJSON file to import.' },
-    },
-    required: ['url'],
-  },
-});
-toolMapping['bulkImport'] = bulkUtils.bulkImport;
-
-// Register FHIRcast Utils
-toolDefinitions.push({
-  name: 'fhircastSubscribe',
-  description: 'Subscribes to a FHIRcast topic.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      topic: { type: 'string' },
-      events: { type: 'array', items: { type: 'string' } },
-    },
-    required: ['topic', 'events'],
-  },
-});
-toolMapping['fhircastSubscribe'] = fhircastUtils.fhircastSubscribe;
-
-toolDefinitions.push({
-  name: 'fhircastUnsubscribe',
-  description: 'Unsubscribes from a FHIRcast topic.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      subscriptionRequest: { type: 'object' },
-    },
-    required: ['subscriptionRequest'],
-  },
-});
-toolMapping['fhircastUnsubscribe'] = fhircastUtils.fhircastUnsubscribe;
-
-toolDefinitions.push({
-  name: 'fhircastGetContext',
-  description: 'Gets the current context of a FHIRcast topic.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      topic: { type: 'string' },
-    },
-    required: ['topic'],
-  },
-});
-toolMapping['fhircastGetContext'] = fhircastUtils.fhircastGetContext;
-
-// 1. Add Specific Tools first
-const specificToolNames = new Set(specificToolDefinitions.map((t) => t.name));
-
-for (const def of specificToolDefinitions) {
-  toolDefinitions.push(def);
-  let func: any = null;
-  const modules = Object.values(specificUtils);
-  for (const mod of modules) {
-    if (mod[def.name]) {
-      func = mod[def.name];
-      break;
-    }
-  }
-
-  if (func) {
-    // Wrap specific functions to handle argument mapping
-    toolMapping[def.name] = async (args: any) => {
-      const toolName = def.name;
-      // Handle different argument patterns based on tool type (Logic copied from original index.ts)
-      if (toolName.includes('ById')) {
-        // Tools that take a single ID parameter
-        const idKey = Object.keys(args).find((key) => key.endsWith('Id')) || 'id';
-        const id = args[idKey];
-        if (id && typeof id === 'string') {
-          return await func(id);
-        }
-        return await func(args);
-      } else if (toolName.startsWith('update')) {
-        // Update tools that take ID and updates object
-        const {
-          patientId,
-          practitionerId,
-          organizationId,
-          encounterId,
-          observationId,
-          medicationRequestId,
-          medicationId,
-          episodeOfCareId,
-          conditionId,
-          ...updates
-        } = args;
-        const id =
-          patientId ||
-          practitionerId ||
-          organizationId ||
-          encounterId ||
-          observationId ||
-          medicationRequestId ||
-          medicationId ||
-          episodeOfCareId ||
-          conditionId;
-
-        // Special handling for updateCondition
-        if (toolName === 'updateCondition') {
-          const updateArgs: any = { id };
-          if (updates.clinicalStatus) {
-            const key = (updates.clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
-            updateArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
-          }
-          if (updates.verificationStatus) {
-            const verStatusMap: { [key: string]: string } = { 'entered-in-error': 'ENTERED-IN-ERROR' };
-            const key = (verStatusMap[updates.verificationStatus] ||
-              (updates.verificationStatus as string).toUpperCase()) as keyof typeof ConditionVerificationStatusCodes;
-            updateArgs.verificationStatus = { coding: [ConditionVerificationStatusCodes[key]] };
-          }
-          if (updates.onsetString !== undefined) {
-            updateArgs.onsetString = updates.onsetString;
-          }
-          return await func(updateArgs);
-        } else {
-          // Legacy update tools usually take (id, updates)
-          return await func(id, updates);
-        }
-      } else if (toolName === 'createCondition') {
-        // Special handling for createCondition
-        const { patientId, code, clinicalStatus, onsetString, recordedDate } = args;
-        const createArgs: any = {
-          subject: { reference: `Patient/${patientId}` },
-          code,
-          onsetString,
-          recordedDate,
-        };
-        if (clinicalStatus) {
-          const key = (clinicalStatus as string).toUpperCase() as keyof typeof ConditionClinicalStatusCodes;
-          createArgs.clinicalStatus = { coding: [ConditionClinicalStatusCodes[key]] };
-        }
-        return await func(createArgs);
-      } else if (toolName === 'searchConditions') {
-        // Special handling for searchConditions
-        const { patientId, ...searchArgs } = args;
-        if (patientId) {
-          searchArgs.subject = patientId;
-        }
-        return await func(searchArgs);
-      } else {
-        // Tools that take the whole arguments object
-        return await func(args);
-      }
-    };
-  } else {
-    // console.error(`Warning: Specific tool definition ${def.name} found but no implementation found.`);
-  }
-}
-
-// 2. Add Generic Tools for everything else
-for (const resourceType of resourceTypes) {
-  // 1. Create
-  const createToolName = `create${resourceType}`;
-  if (!specificToolNames.has(createToolName)) {
-    toolDefinitions.push({
-      name: createToolName,
-      description: `Creates a new ${resourceType} resource.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          resource: {
-            type: 'object',
-            description: `The ${resourceType} resource data to create.`,
-            additionalProperties: true,
-          },
-        },
-        required: ['resource'],
-      },
-    });
-    toolMapping[createToolName] = (args: any) => GenericResourceTool.create(resourceType, args.resource || args);
-  }
-
-  // 2. GetById
-  const getToolName = `get${resourceType}ById`;
-  if (!specificToolNames.has(getToolName)) {
-    toolDefinitions.push({
-      name: getToolName,
-      description: `Retrieves a ${resourceType} resource by its unique ID.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-            description: `The unique ID of the ${resourceType} to retrieve.`,
-          },
-        },
-        required: ['id'],
-      },
-    });
-    toolMapping[getToolName] = (args: any) => {
-      const id =
-        typeof args === 'string'
-          ? args
-          : args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-      return GenericResourceTool.getById(resourceType, id);
-    };
-  }
-
-  // 3. Update
-  const updateToolName = `update${resourceType}`;
-  if (!specificToolNames.has(updateToolName)) {
-    toolDefinitions.push({
-      name: updateToolName,
-      description: `Updates an existing ${resourceType} resource.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-            description: `The unique ID of the ${resourceType} to update.`,
-          },
-          updates: {
-            type: 'object',
-            description: 'The fields to update.',
-            additionalProperties: true,
-          },
-        },
-        required: ['id', 'updates'],
-      },
-    });
-    toolMapping[updateToolName] = (args: any) => {
-      const id = args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-      const updates =
-        args.updates ||
-        (() => {
-          const { id: _, ...rest } = args;
-          return rest;
-        })();
-      return GenericResourceTool.update(resourceType, id, updates);
-    };
-  }
-
-  // 4. Delete
-  const deleteToolName = `delete${resourceType}`;
-  // No specific tools have delete implemented in current repo, so we add it for all
-  toolDefinitions.push({
-    name: deleteToolName,
-    description: `Deletes a ${resourceType} resource.`,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        id: {
-          type: 'string',
-          description: `The unique ID of the ${resourceType} to delete.`,
-        },
-      },
-      required: ['id'],
-    },
-  });
-  toolMapping[deleteToolName] = (args: any) => {
-    const id =
-      typeof args === 'string'
-        ? args
-        : args.id || args[`${resourceType.charAt(0).toLowerCase() + resourceType.slice(1)}Id`];
-    return GenericResourceTool.delete(resourceType, id);
-  };
-
-  // 5. Search
-  const searchToolName = `search${resourceType}s`;
-  if (!specificToolNames.has(searchToolName)) {
-    toolDefinitions.push({
-      name: searchToolName,
-      description: `Searches for ${resourceType} resources.`,
-      inputSchema: {
-        type: 'object',
-        description: 'Search parameters',
-        additionalProperties: true,
-      },
-    });
-    toolMapping[searchToolName] = (args: any) => GenericResourceTool.search(resourceType, args);
-  }
-}
-
-// 6. Patch
-// Adding generic Patch tool
-toolDefinitions.push({
-  name: 'patchResource',
-  description: 'Patches a resource.',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      resourceType: { type: 'string' },
-      id: { type: 'string' },
-      patch: {
-        type: 'object',
-        description: 'JSON Patch operations',
-        additionalProperties: true,
-      },
-    },
-    required: ['resourceType', 'id', 'patch'],
-  },
-});
-toolMapping['patchResource'] = (args: any) => GenericResourceTool.patch(args.resourceType, args.id, args.patch);
