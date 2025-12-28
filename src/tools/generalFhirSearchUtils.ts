@@ -11,6 +11,8 @@ export interface GeneralFhirSearchArgs {
 /**
  * Performs a generic FHIR search operation.
  * Returns a Bundle of resources or an OperationOutcome in case of an error.
+ * @param args - The arguments for the search.
+ * @param client - Optional MedplumClient to use.
  */
 export async function generalFhirSearch(
   args: GeneralFhirSearchArgs,
@@ -61,13 +63,13 @@ export async function generalFhirSearch(
       })
       .join('&');
 
-    console.log(`Performing general FHIR search for type "${args.resourceType}" with query: ${queryString}`);
+    // console.log(`Performing general FHIR search for type "${args.resourceType}" with query: ${queryString}`);
 
     // Medplum SDK's search method can take ResourceType or a string for the resource type.
     // The result is a Bundle of the specified Resource type.
     const result = (await medplumClient.search(args.resourceType as ResourceType, queryString)) as Bundle<Resource>;
 
-    console.log(`General FHIR search found ${result.entry?.length || 0} resources.`);
+    // console.log(`General FHIR search found ${result.entry?.length || 0} resources.`);
     return result;
   } catch (error: any) {
     console.error(`Error during general FHIR search for type "${args.resourceType}":`, error);

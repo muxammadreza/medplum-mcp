@@ -266,7 +266,7 @@ describe('MedicationRequest Tool Integration Tests', () => {
     it('should throw an error if updates object is empty', async () => {
       expect(medReqToUpdate?.id).toBeDefined();
       // @ts-ignore: Testing invalid input
-      await expect(updateMedicationRequest(medReqToUpdate!.id!, {})).rejects.toThrow('Updates object cannot be empty');
+      await expect(updateMedicationRequest(medReqToUpdate!.id, {})).rejects.toThrow('Updates object cannot be empty');
     });
   });
 

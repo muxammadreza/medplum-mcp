@@ -36,7 +36,6 @@
 ## Claude Desktop Configuration
 
 1. **Open Claude Desktop Settings:**
-
    - On macOS: Claude menu → Settings → Developer
    - On Windows: File menu → Settings → Developer
 
@@ -64,7 +63,6 @@
    ```
 
    **Important:**
-
    - Replace `/absolute/path/to/medplum-mcp/` with the actual absolute path to your project
    - Replace the environment variables with your actual Medplum credentials
 

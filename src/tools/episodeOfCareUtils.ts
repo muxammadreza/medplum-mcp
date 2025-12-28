@@ -3,12 +3,7 @@ import {
   // EpisodeOfCareStatus, // This type does not exist as a named export
   CodeableConcept,
   Identifier,
-  Reference,
   Period,
-  Patient,
-  Organization,
-  Practitioner,
-  Condition,
   OperationOutcome,
 } from '@medplum/fhirtypes';
 import { medplum, MedplumClient, ensureAuthenticated } from '../config/medplumClient';
@@ -58,6 +53,9 @@ export interface EpisodeOfCareSearchArgs {
 
 /**
  * Creates a new EpisodeOfCare resource.
+ * @param args The arguments for creating the EpisodeOfCare.
+ * @param client Optional MedplumClient to use.
+ * @returns The created EpisodeOfCare resource or an OperationOutcome in case of an error.
  */
 export async function createEpisodeOfCare(
   args: CreateEpisodeOfCareArgs,
@@ -100,7 +98,7 @@ export async function createEpisodeOfCare(
     }
 
     const result = (await medplumClient.createResource(episode)) as EpisodeOfCare;
-    console.log('EpisodeOfCare created successfully:', result.id);
+    // console.log('EpisodeOfCare created successfully:', result.id);
     return result;
   } catch (error: any) {
     const outcome: OperationOutcome = {
@@ -122,6 +120,9 @@ export async function createEpisodeOfCare(
 
 /**
  * Retrieves an EpisodeOfCare resource by its ID.
+ * @param episodeOfCareId The ID of the EpisodeOfCare to retrieve.
+ * @param client Optional MedplumClient to use.
+ * @returns The EpisodeOfCare resource or null if not found, or an OperationOutcome on error.
  */
 export async function getEpisodeOfCareById(
   episodeOfCareId: string,
@@ -133,12 +134,12 @@ export async function getEpisodeOfCareById(
     if (!episodeOfCareId) {
       throw new Error('EpisodeOfCare ID is required.');
     }
-    const result = (await medplumClient.readResource('EpisodeOfCare', episodeOfCareId)) as EpisodeOfCare | null;
-    console.log(result ? 'EpisodeOfCare retrieved:' : 'EpisodeOfCare not found:', episodeOfCareId);
+    const result = await medplumClient.readResource('EpisodeOfCare', episodeOfCareId);
+    // console.log(result ? 'EpisodeOfCare retrieved:' : 'EpisodeOfCare not found:', episodeOfCareId);
     return result;
   } catch (error: any) {
     if (error.outcome && error.outcome.issue && error.outcome.issue[0]?.code === 'not-found') {
-      console.log(`EpisodeOfCare with ID "${episodeOfCareId}" not found.`);
+      // console.log(`EpisodeOfCare with ID "${episodeOfCareId}" not found.`);
       return null;
     }
     const outcome: OperationOutcome = {
@@ -160,6 +161,10 @@ export async function getEpisodeOfCareById(
 
 /**
  * Updates an existing EpisodeOfCare resource.
+ * @param episodeOfCareId The ID of the EpisodeOfCare to update.
+ * @param updates The updates to apply.
+ * @param client Optional MedplumClient to use.
+ * @returns The updated EpisodeOfCare resource or an OperationOutcome on error.
  */
 export async function updateEpisodeOfCare(
   episodeOfCareId: string,
@@ -206,13 +211,16 @@ export async function updateEpisodeOfCare(
     if (updates.type) resourceToUpdate.type = updates.type; // Replace array
     if (updates.managingOrganizationId) {
       resourceToUpdate.managingOrganization = { reference: `Organization/${updates.managingOrganizationId}` };
-    } else if (updates.hasOwnProperty('managingOrganizationId') && updates.managingOrganizationId === null) {
+    } else if (
+      Object.prototype.hasOwnProperty.call(updates, 'managingOrganizationId') &&
+      updates.managingOrganizationId === null
+    ) {
       delete resourceToUpdate.managingOrganization; // Allow unsetting
     }
 
     if (updates.careManagerId) {
       resourceToUpdate.careManager = { reference: `Practitioner/${updates.careManagerId}` };
-    } else if (updates.hasOwnProperty('careManagerId') && updates.careManagerId === null) {
+    } else if (Object.prototype.hasOwnProperty.call(updates, 'careManagerId') && updates.careManagerId === null) {
       delete resourceToUpdate.careManager; // Allow unsetting
     }
 
@@ -220,11 +228,11 @@ export async function updateEpisodeOfCare(
     let periodUpdated = false;
     const currentPeriod = resourceToUpdate.period || {};
     const newPeriod: Period = { ...currentPeriod };
-    if (updates.hasOwnProperty('periodStart')) {
+    if (Object.prototype.hasOwnProperty.call(updates, 'periodStart')) {
       newPeriod.start = updates.periodStart; // Allow null/undefined to clear
       periodUpdated = true;
     }
-    if (updates.hasOwnProperty('periodEnd')) {
+    if (Object.prototype.hasOwnProperty.call(updates, 'periodEnd')) {
       newPeriod.end = updates.periodEnd; // Allow null/undefined to clear
       periodUpdated = true;
     }
@@ -242,7 +250,7 @@ export async function updateEpisodeOfCare(
     );
 
     const result = (await medplumClient.updateResource(resourceToUpdate)) as EpisodeOfCare;
-    console.log('EpisodeOfCare updated successfully:', result.id);
+    // console.log('EpisodeOfCare updated successfully:', result.id);
     return result;
   } catch (error: any) {
     if (error.outcome && error.outcome.issue && error.outcome.issue[0]?.code === 'not-found') {
@@ -276,6 +284,9 @@ export async function updateEpisodeOfCare(
 
 /**
  * Searches for EpisodeOfCare resources based on specified criteria.
+ * @param args The search criteria.
+ * @param client Optional MedplumClient to use.
+ * @returns An array of EpisodeOfCare resources matching the criteria or an OperationOutcome on error.
  */
 export async function searchEpisodesOfCare(
   args: EpisodeOfCareSearchArgs,
@@ -335,10 +346,10 @@ export async function searchEpisodesOfCare(
     }
 
     const query = searchCriteria.join('&');
-    console.log('Searching EpisodesOfCare with query:', query);
+    // console.log('Searching EpisodesOfCare with query:', query);
 
     const result = (await medplumClient.searchResources('EpisodeOfCare', query)) as EpisodeOfCare[];
-    console.log(`Found ${result.length} EpisodesOfCare.`);
+    // console.log(`Found ${result.length} EpisodesOfCare.`);
     return result;
   } catch (error: any) {
     console.error('Error searching EpisodesOfCare:', error);

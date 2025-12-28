@@ -1,15 +1,26 @@
 #!/usr/bin/env node
 
+/**
+ * Medplum MCP Server
+ * 
+ * IMPORTANT: This server uses stdio transport. All logging MUST go to stderr,
+ * NOT stdout. stdout is reserved exclusively for JSON-RPC protocol messages.
+ */
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequest, CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  CallToolRequest,
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
+
+// Load environment variables FIRST, with quiet mode to prevent stdout pollution
 import dotenv from 'dotenv';
+dotenv.config({ quiet: true });
 
-// Import tool registry
+// Import tool registry (after dotenv is configured)
 import { toolDefinitions, toolMapping } from './tools/toolRegistry.js';
-
-// Load environment variables
-dotenv.config();
 
 // Create the MCP server
 const server = new Server(
@@ -41,7 +52,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
     const toolName = request.params.name;
     const args = request.params.arguments;
 
-    console.error(`Executing tool: ${toolName} with args:`, JSON.stringify(args, null, 2));
+    // Log to stderr only
+    console.error(`[MCP] Executing tool: ${toolName}`);
 
     const toolFunction = toolMapping[toolName];
     if (!toolFunction) {
@@ -51,22 +63,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
     let result;
 
     try {
-      // Since we wrapped all tools in toolRegistry to take `args` and return a Promise,
-      // we can just call the function.
       result = await toolFunction(args);
-    } catch (toolError: any) {
+    } catch (toolError: unknown) {
       // Handle specific Medplum/FHIR errors
-      if (toolError.message && typeof toolError.message === 'string') {
-        // If it's a string error message, wrap it properly
+      if (
+        typeof toolError === 'object' &&
+        toolError !== null &&
+        'message' in toolError &&
+        typeof (toolError as { message?: unknown }).message === 'string'
+      ) {
         result = {
-          error: toolError.message,
+          error: (toolError as { message: string }).message,
           success: false,
         };
-      } else if (toolError.outcome) {
+      } else if (
+        typeof toolError === 'object' &&
+        toolError !== null &&
+        'outcome' in toolError
+      ) {
         // FHIR OperationOutcome error
         result = {
           error: 'FHIR operation failed',
-          outcome: toolError.outcome,
+          outcome: (toolError as { outcome: unknown }).outcome,
           success: false,
         };
       } else {
@@ -77,8 +95,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         };
       }
     }
-
-    console.error(`Tool ${toolName} result:`, JSON.stringify(result, null, 2));
 
     // Ensure result is serializable
     const serializedResult = JSON.stringify(result, null, 2);
@@ -92,7 +108,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       ],
     };
   } catch (error) {
-    console.error('Error executing tool:', error);
+    console.error('[MCP] Error executing tool:', error);
 
     // Ensure error response is always valid JSON
     const errorResponse = {
@@ -113,25 +129,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
 });
 
 // Start the server
-async function runServer() {
+async function runServer(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Medplum MCP Server running on stdio');
+  console.error('[MCP] Medplum MCP Server running on stdio');
 }
 
 // Handle graceful shutdown
-process.on('SIGINT', async () => {
-  console.error('Shutting down Medplum MCP Server...');
+process.on('SIGINT', () => {
+  console.error('[MCP] Shutting down...');
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  console.error('Shutting down Medplum MCP Server...');
+process.on('SIGTERM', () => {
+  console.error('[MCP] Shutting down...');
   process.exit(0);
 });
 
 // Start the server
 runServer().catch((error) => {
-  console.error('Fatal error in main():', error);
+  console.error('[MCP] Fatal error:', error);
   process.exit(1);
 });

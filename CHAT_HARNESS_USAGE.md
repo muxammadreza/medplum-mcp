@@ -158,13 +158,11 @@ npx ts-node src/llm-test-harness.ts
 ### Common Issues
 
 1. **Connection Failed**:
-
    - Ensure Medplum server is running
    - Check your `.env` file configuration
    - Verify client credentials
 
 2. **OpenAI API Errors**:
-
    - Verify `OPENAI_API_KEY` is set correctly
    - Check your OpenAI account has sufficient credits
 

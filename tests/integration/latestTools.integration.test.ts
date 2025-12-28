@@ -68,59 +68,57 @@ describe('Integration Tests for Newly Added Tools', () => {
 
   describe('Bulk Import Tool', () => {
     it('should call $import', async () => {
-        const mockResponse = { resourceType: 'OperationOutcome' };
-        (medplum.post as jest.Mock).mockResolvedValue(mockResponse);
+      const mockResponse = { resourceType: 'OperationOutcome' };
+      (medplum.post as jest.Mock).mockResolvedValue(mockResponse);
 
-        const url = 'https://example.com/data.ndjson';
-        await bulkImport({ url });
+      const url = 'https://example.com/data.ndjson';
+      await bulkImport({ url });
 
-        expect(medplum.post).toHaveBeenCalledWith(
-            expect.stringContaining('$import'),
-            expect.objectContaining({
-                resourceType: 'Parameters',
-                parameter: expect.arrayContaining([
-                    expect.objectContaining({ name: 'inputSource', valueUri: url })
-                ])
-            })
-        );
+      expect(medplum.post).toHaveBeenCalledWith(
+        expect.stringContaining('$import'),
+        expect.objectContaining({
+          resourceType: 'Parameters',
+          parameter: expect.arrayContaining([expect.objectContaining({ name: 'inputSource', valueUri: url })]),
+        }),
+      );
     });
   });
 
   describe('Admin Action Tools', () => {
     it('should send email', async () => {
-        const mockResponse = { resourceType: 'OperationOutcome' };
-        (medplum.sendEmail as jest.Mock).mockResolvedValue(mockResponse);
+      const mockResponse = { resourceType: 'OperationOutcome' };
+      (medplum.sendEmail as jest.Mock).mockResolvedValue(mockResponse);
 
-        const args = { to: 'test@example.com', subject: 'Test' };
-        await sendEmail(args);
+      const args = { to: 'test@example.com', subject: 'Test' };
+      await sendEmail(args);
 
-        expect(medplum.sendEmail).toHaveBeenCalledWith(args);
+      expect(medplum.sendEmail).toHaveBeenCalledWith(args);
     });
   });
 
   describe('FHIRcast Tools', () => {
     it('should subscribe to topic', async () => {
-        const mockSub = { topic: 'topic', events: ['event'] };
-        (medplum.fhircastSubscribe as jest.Mock).mockResolvedValue(mockSub);
+      const mockSub = { topic: 'topic', events: ['event'] };
+      (medplum.fhircastSubscribe as jest.Mock).mockResolvedValue(mockSub);
 
-        await fhircastSubscribe({ topic: 'topic', events: ['event'] });
-        expect(medplum.fhircastSubscribe).toHaveBeenCalledWith('topic', ['event']);
+      await fhircastSubscribe({ topic: 'topic', events: ['event'] });
+      expect(medplum.fhircastSubscribe).toHaveBeenCalledWith('topic', ['event']);
     });
 
     it('should unsubscribe from topic', async () => {
-        (medplum.fhircastUnsubscribe as jest.Mock).mockResolvedValue(undefined);
-        const subReq = { topic: 'topic', events: ['event'], endpoint: 'url' } as any;
+      (medplum.fhircastUnsubscribe as jest.Mock).mockResolvedValue(undefined);
+      const subReq = { topic: 'topic', events: ['event'], endpoint: 'url' } as any;
 
-        await fhircastUnsubscribe({ subscriptionRequest: subReq });
-        expect(medplum.fhircastUnsubscribe).toHaveBeenCalledWith(subReq);
+      await fhircastUnsubscribe({ subscriptionRequest: subReq });
+      expect(medplum.fhircastUnsubscribe).toHaveBeenCalledWith(subReq);
     });
 
     it('should get context', async () => {
-        const mockContext = { context: [] };
-        (medplum.fhircastGetContext as jest.Mock).mockResolvedValue(mockContext);
+      const mockContext = { context: [] };
+      (medplum.fhircastGetContext as jest.Mock).mockResolvedValue(mockContext);
 
-        await fhircastGetContext({ topic: 'topic' });
-        expect(medplum.fhircastGetContext).toHaveBeenCalledWith('topic');
+      await fhircastGetContext({ topic: 'topic' });
+      expect(medplum.fhircastGetContext).toHaveBeenCalledWith('topic');
     });
   });
 });

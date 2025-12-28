@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { medplum, ensureAuthenticated } from '../config/medplumClient';
 import { Resource, Project, User, Patient, Reference, Media, Attachment, Binary } from '@medplum/fhirtypes';
@@ -68,7 +68,7 @@ export async function startNewPatient(args: StartNewPatientArgs): Promise<Patien
 
 export async function getProject(): Promise<Project | undefined> {
   await ensureAuthenticated();
-  return medplum.getProject() as Project | undefined;
+  return medplum.getProject();
 }
 
 export async function getProfile(): Promise<Resource | undefined> {

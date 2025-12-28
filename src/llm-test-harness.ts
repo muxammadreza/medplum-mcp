@@ -201,8 +201,8 @@ class MCPChatTestHarness {
           const toolResults: string[] = [];
 
           for (const toolCall of assistantMessage.tool_calls) {
-            const toolName = toolCall.function.name;
-            const toolArgs = JSON.parse(toolCall.function.arguments);
+            const toolName = (toolCall as any).function.name;
+            const toolArgs = JSON.parse((toolCall as any).function.arguments);
 
             console.log(`   📞 Calling ${toolName} with args:`, toolArgs);
 
